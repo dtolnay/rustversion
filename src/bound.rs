@@ -1,12 +1,19 @@
 use crate::date::Date;
-use crate::version::{Channel::*, Release, Version};
+use crate::version::{Channel::*, Version};
+use quote::quote;
 use std::cmp::Ordering;
-use syn::parse::{Parse, ParseStream, Result};
-use syn::Token;
+use syn::parse::{Error, Parse, ParseStream, Result};
+use syn::{LitFloat, LitInt, Token};
 
 pub enum Bound {
     Nightly(Date),
     Stable(Release),
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Release {
+    pub minor: u16,
+    pub patch: Option<u16>,
 }
 
 impl Parse for Bound {
@@ -19,6 +26,31 @@ impl Parse for Bound {
     }
 }
 
+impl Parse for Release {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let span = input.cursor().token_stream();
+        let error = || Error::new_spanned(&span, "expected rustc release number, like 1.31");
+
+        let major_minor: LitFloat = input.parse().map_err(|_| error())?;
+        let string = quote!(#major_minor).to_string();
+
+        if !string.starts_with("1.") {
+            return Err(error());
+        }
+
+        let minor: u16 = string[2..].parse().map_err(|_| error())?;
+
+        let patch = if input.parse::<Option<Token![.]>>()?.is_some() {
+            let int: LitInt = input.parse().map_err(|_| error())?;
+            Some(int.value().to_string().parse().map_err(|_| error())?)
+        } else {
+            None
+        };
+
+        Ok(Release { minor, patch })
+    }
+}
+
 impl PartialEq<Bound> for Version {
     fn eq(&self, rhs: &Bound) -> bool {
         match rhs {
@@ -26,7 +58,10 @@ impl PartialEq<Bound> for Version {
                 Stable | Beta | Dev => false,
                 Nightly(nightly) => nightly == *date,
             },
-            Bound::Stable(release) => self.release == *release,
+            Bound::Stable(release) => {
+                self.minor == release.minor
+                    && release.patch.map_or(true, |patch| self.patch == patch)
+            }
         }
     }
 }
@@ -39,7 +74,11 @@ impl PartialOrd<Bound> for Version {
                 Nightly(nightly) => Some(nightly.cmp(date)),
                 Dev => Some(Ordering::Greater),
             },
-            Bound::Stable(release) => Some(self.release.cmp(release)),
+            Bound::Stable(release) => {
+                let version = (self.minor, self.patch);
+                let bound = (release.minor, release.patch.unwrap_or(0));
+                Some(version.cmp(&bound))
+            }
         }
     }
 }

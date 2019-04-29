@@ -1,6 +1,6 @@
-use crate::bound::Bound;
+use crate::bound::{Bound, Release};
 use crate::date::Date;
-use crate::version::{Channel, Release, Version};
+use crate::version::{Channel, Version};
 use syn::parse::{Parse, ParseStream, Result};
 use syn::punctuated::Punctuated;
 use syn::{parenthesized, token, Token};
@@ -35,7 +35,10 @@ impl Expr {
             },
             Since(bound) => rustc >= *bound,
             Before(bound) => rustc < *bound,
-            Release(release) => rustc.release == *release,
+            Release(release) => {
+                rustc.minor == release.minor
+                    && release.patch.map_or(true, |patch| rustc.patch == patch)
+            }
             Not(expr) => !expr.eval(rustc),
             Any(exprs) => exprs.iter().any(|e| e.eval(rustc)),
             All(exprs) => exprs.iter().all(|e| e.eval(rustc)),

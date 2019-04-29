@@ -7,7 +7,7 @@ use std::str::FromStr;
 use std::string::FromUtf8Error;
 
 use crate::date::Date;
-use crate::version::{Channel::*, Release, Version};
+use crate::version::{Channel::*, Version};
 use proc_macro2::Span;
 
 #[derive(Debug)]
@@ -101,7 +101,8 @@ fn parse(string: &str) -> Option<Version> {
     };
 
     Some(Version {
-        release: Release { minor, patch },
+        minor,
+        patch,
         channel,
     })
 }
@@ -112,50 +113,40 @@ fn test_parse() {
         (
             "rustc 1.0.0 (a59de37e9 2015-05-13) (built 2015-05-14)",
             Version {
-                release: Release {
-                    minor: 0,
-                    patch: 0,
-                },
+                minor: 0,
+                patch: 0,
                 channel: Stable,
             },
         ),
         (
             "rustc 1.18.0",
             Version {
-                release: Release {
-                    minor: 18,
-                    patch: 0,
-                },
+                minor: 18,
+                patch: 0,
                 channel: Stable,
             },
         ),
         (
             "rustc 1.24.1 (d3ae9a9e0 2018-02-27)",
             Version {
-                release: Release {
-                    minor: 24,
-                    patch: 1,
-                },
+                minor: 24,
+                patch: 1,
                 channel: Stable,
             },
         ),
         (
             "rustc 1.35.0-beta.3 (c13114dc8 2019-04-27)",
             Version {
-                release: Release {
-                    minor: 35,
-                    patch: 0,
-                },
+                minor: 35,
+                patch: 0,
                 channel: Beta,
             },
         ),
         (
             "rustc 1.36.0-nightly (938d4ffe1 2019-04-27)",
             Version {
-                release: Release {
-                    minor: 36,
-                    patch: 0,
-                },
+                minor: 36,
+                patch: 0,
                 channel: Nightly(Date {
                     year: 2019,
                     month: 4,
@@ -166,10 +157,8 @@ fn test_parse() {
         (
             "rustc 1.36.0-dev",
             Version {
-                release: Release {
-                    minor: 36,
-                    patch: 0,
-                },
+                minor: 36,
+                patch: 0,
                 channel: Dev,
             },
         ),
@@ -177,10 +166,8 @@ fn test_parse() {
             "warning: invalid logging spec 'warning', ignoring it
              rustc 1.30.0-nightly (3bc2ca7e4 2018-09-20)",
             Version {
-                release: Release {
-                    minor: 30,
-                    patch: 0,
-                },
+                minor: 30,
+                patch: 0,
                 channel: Nightly(Date {
                     year: 2018,
                     month: 9,
