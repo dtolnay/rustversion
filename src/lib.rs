@@ -118,6 +118,19 @@
 //! }
 //! ```
 //!
+//! Augmenting code with `const` as const impls are stabilized in the standard
+//! library. This use of `const` as an attribute is recognized as a special case
+//! by the rustc::attr macro.
+//!
+//! ```
+//! use std::time::Duration;
+//!
+//! #[rustc::attr(since(1.32), const)]
+//! fn duration_as_days(dur: Duration) -> u64 {
+//!     dur.as_secs() / 60 / 60 / 24
+//! }
+//! ```
+//!
 //! <br>
 
 extern crate proc_macro;
@@ -130,11 +143,12 @@ mod rustc;
 mod time;
 mod version;
 
+use crate::attr::Then;
 use crate::expr::Expr;
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::quote;
-use syn::{parse_macro_input, Result};
+use syn::{parse_macro_input, ItemFn, Result};
 
 #[proc_macro_attribute]
 pub fn stable(args: TokenStream, input: TokenStream) -> TokenStream {
@@ -215,14 +229,22 @@ pub fn attr(args: TokenStream, input: TokenStream) -> TokenStream {
 fn try_attr(args: attr::Args, input: TokenStream) -> Result<TokenStream> {
     let version = rustc::version()?;
 
-    if args.condition.eval(version) {
-        let then = args.then;
-        let input = TokenStream2::from(input);
-        Ok(TokenStream::from(quote! {
-            #[cfg_attr(all(), #then)]
-            #input
-        }))
-    } else {
-        Ok(input)
+    if !args.condition.eval(version) {
+        return Ok(input);
+    }
+
+    match args.then {
+        Then::Const(const_token) => {
+            let mut input: ItemFn = syn::parse(input)?;
+            input.constness = Some(const_token);
+            Ok(TokenStream::from(quote!(#input)))
+        }
+        Then::Attribute(then) => {
+            let input = TokenStream2::from(input);
+            Ok(TokenStream::from(quote! {
+                #[cfg_attr(all(), #then)]
+                #input
+            }))
+        }
     }
 }
