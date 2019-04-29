@@ -1,5 +1,4 @@
 use crate::time;
-use std::convert::TryInto;
 use std::fmt::{self, Display};
 use std::num::ParseIntError;
 use std::str::FromStr;
@@ -62,10 +61,15 @@ impl Parse for Date {
         input.parse::<Token![-]>()?;
         let day: LitInt = input.parse().map_err(|_| error())?;
 
-        let year = year.value().try_into().map_err(|_| error())?;
-        let month = month.value().try_into().map_err(|_| error())?;
-        let day = day.value().try_into().map_err(|_| error())?;
+        let (year, month, day) = (year.value(), month.value(), day.value());
+        if year >= 3000 || month > 12 || day > 31 {
+            return Err(error());
+        }
 
-        Ok(Date { year, month, day })
+        Ok(Date {
+            year: year as u16,
+            month: month as u8,
+            day: day as u8,
+        })
     }
 }

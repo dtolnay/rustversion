@@ -1,6 +1,5 @@
 use crate::date::Date;
 use quote::quote;
-use std::convert::TryInto;
 use syn::parse::{Error, Parse, ParseStream, Result};
 use syn::{LitFloat, LitInt, Token};
 
@@ -41,7 +40,7 @@ impl Parse for Release {
 
         if input.parse::<Option<Token![.]>>()?.is_some() {
             let int: LitInt = input.parse().map_err(|_| error())?;
-            patch = int.value().try_into().map_err(|_| error())?;
+            patch = int.value().to_string().parse().map_err(|_| error())?;
         }
 
         Ok(Release { minor, patch })
