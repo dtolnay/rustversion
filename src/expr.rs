@@ -36,7 +36,8 @@ impl Expr {
             Since(bound) => rustc >= *bound,
             Before(bound) => rustc < *bound,
             Release(release) => {
-                rustc.minor == release.minor
+                rustc.channel == Channel::Stable
+                    && rustc.minor == release.minor
                     && release.patch.map_or(true, |patch| rustc.patch == patch)
             }
             Not(expr) => !expr.eval(rustc),
