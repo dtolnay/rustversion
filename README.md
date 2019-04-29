@@ -14,7 +14,7 @@ compiler version, analogous to [`#[cfg(...)]`][cfg] and
 
 ```toml
 [dependencies]
-select-rustc = "0.0"
+select-rustc = "0.1"
 ```
 
 <br>
