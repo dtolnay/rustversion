@@ -89,32 +89,36 @@
 //!
 //! # Use cases
 //!
-//! Providing additional trait impls as types are stabilized in the standard
-//! library without breaking compatibility with older compilers; in this case
-//! u128 stabilized in [Rust 1.26][u128]:
+//! Providing additional trait impls as types are stabilized in the standard library
+//! without breaking compatibility with older compilers; in this case Pin\<P\>
+//! stabilized in [Rust 1.33][pin]:
 //!
-//! [u128]: https://blog.rust-lang.org/2018/05/10/Rust-1.26.html#128-bit-integers
+//! [pin]: https://blog.rust-lang.org/2019/02/28/Rust-1.33.0.html#pinning
 //!
 //! ```
 //! # trait MyTrait {}
 //! #
-//! #[rustc::since(1.26)]
-//! impl MyTrait for u128 {
+//! #[rustc::since(1.33)]
+//! use std::pin::Pin;
+//!
+//! #[rustc::since(1.33)]
+//! impl<P: MyTrait> MyTrait for Pin<P> {
 //!     /* ... */
 //! }
 //! ```
 //!
-//! Similar but for language features; the #\[must_use\] attribute stabilized in
-//! [Rust 1.27][must_use]:
+//! Similar but for language features; the ability to control alignment greater than
+//! 1 of packed structs was stabilized in [Rust 1.33][packed].
 //!
-//! [must_use]: https://blog.rust-lang.org/2018/06/21/Rust-1.27.html#[must_use]-on-functions
+//! [packed]: https://github.com/rust-lang/rust/blob/master/RELEASES.md#version-1330-2019-02-28
 //!
 //! ```
-//! # type MyReturn = ();
-//! #
-//! #[rustc::attr(since(1.27), must_use)]
-//! fn f() -> MyReturn {
-//!     /* ... */
+//! #[rustc::attr(before(1.33), repr(packed))]
+//! #[rustc::attr(since(1.33), repr(packed(2)))]
+//! struct Six(i16, i32);
+//!
+//! fn main() {
+//!     println!("{}", std::mem::align_of::<Six>());
 //! }
 //! ```
 //!
