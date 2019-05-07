@@ -8,3 +8,10 @@ rust:
 
 script:
   - cargo test
+
+matrix:
+  include:
+    - rust: nightly
+      name: Minimal versions
+      before_script:
+        - cargo update -Z minimal-versions
