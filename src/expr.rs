@@ -19,10 +19,10 @@ pub enum Expr {
 }
 
 impl Expr {
-    pub fn eval(&self, rustc: Version) -> bool {
+    pub fn eval(&self, rustc: Version) -> Result<bool> {
         use self::Expr::*;
 
-        match self {
+        Ok(match self {
             Stable => rustc.channel == Channel::Stable,
             Beta => rustc.channel == Channel::Beta,
             Nightly => match rustc.channel {
@@ -40,10 +40,10 @@ impl Expr {
                     && rustc.minor == release.minor
                     && release.patch.map_or(true, |patch| rustc.patch == patch)
             }
-            Not(expr) => !expr.eval(rustc),
-            Any(exprs) => exprs.iter().any(|e| e.eval(rustc)),
-            All(exprs) => exprs.iter().all(|e| e.eval(rustc)),
-        }
+            Not(expr) => !expr.eval(rustc)?,
+            Any(exprs) => exprs.iter().map(|e| e.eval(rustc)).collect::<Result<Vec<_>>>()?.into_iter().any(|b| b),
+            All(exprs) => exprs.iter().map(|e| e.eval(rustc)).collect::<Result<Vec<_>>>()?.into_iter().all(|b| b),
+        })
     }
 }
 

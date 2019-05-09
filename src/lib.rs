@@ -213,7 +213,7 @@ fn try_cfg(top: &str, args: TokenStream, input: TokenStream) -> Result<TokenStre
     let expr: Expr = syn::parse2(full_args)?;
     let version = rustc::version()?;
 
-    if expr.eval(version) {
+    if expr.eval(version)? {
         Ok(input)
     } else {
         Ok(TokenStream::new())
@@ -233,7 +233,7 @@ pub fn attr(args: TokenStream, input: TokenStream) -> TokenStream {
 fn try_attr(args: attr::Args, input: TokenStream) -> Result<TokenStream> {
     let version = rustc::version()?;
 
-    if !args.condition.eval(version) {
+    if !args.condition.eval(version)? {
         return Ok(input);
     }
 
