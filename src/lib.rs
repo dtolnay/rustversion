@@ -137,6 +137,7 @@
 //!
 //! <br>
 
+#[macro_use] extern crate lazy_static;
 extern crate proc_macro;
 
 mod attr;
@@ -194,6 +195,11 @@ pub fn all(args: TokenStream, input: TokenStream) -> TokenStream {
     cfg("all", args, input)
 }
 
+#[proc_macro_attribute]
+pub fn minver(args: TokenStream, input: TokenStream) -> TokenStream {
+    cfg("minver", args, input)
+}
+
 fn cfg(top: &str, args: TokenStream, input: TokenStream) -> TokenStream {
     match try_cfg(top, args, input) {
         Ok(tokens) => tokens,
@@ -213,10 +219,10 @@ fn try_cfg(top: &str, args: TokenStream, input: TokenStream) -> Result<TokenStre
     let expr: Expr = syn::parse2(full_args)?;
     let version = rustc::version()?;
 
-    if expr.eval(version)? {
-        Ok(input)
-    } else {
-        Ok(TokenStream::new())
+    match expr.eval(version) {
+        Ok(true) => Ok(input),
+        Ok(false) => Ok(TokenStream::new()),
+        Err(err) => unimplemented!(),
     }
 }
 
@@ -233,9 +239,11 @@ pub fn attr(args: TokenStream, input: TokenStream) -> TokenStream {
 fn try_attr(args: attr::Args, input: TokenStream) -> Result<TokenStream> {
     let version = rustc::version()?;
 
-    if !args.condition.eval(version)? {
-        return Ok(input);
-    }
+    match args.condition.eval(version) {
+        Ok(false) => return Ok(input),
+        Err(err) => unimplemented!(),
+        _ => (),
+    };
 
     match args.then {
         Then::Const(const_token) => {
