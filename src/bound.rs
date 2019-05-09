@@ -5,6 +5,7 @@ use std::cmp::Ordering;
 use syn::parse::{Error, Parse, ParseStream, Result};
 use syn::{LitFloat, LitInt, Token};
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord)]
 pub enum Bound {
     Nightly(Date),
     Stable(Release),
@@ -80,5 +81,16 @@ impl PartialOrd<Bound> for Version {
                 Some(version.cmp(&bound))
             }
         }
+    }
+}
+
+impl PartialOrd<Bound> for Bound {
+    fn partial_cmp(&self, rhs: &Bound) -> Option<Ordering> {
+        Some(match (self, rhs) {
+            (Bound::Nightly(ref date1), Bound::Nightly(ref date2)) => date1.cmp(date2),
+            (Bound::Nightly(_), Bound::Stable(_)) => Ordering::Greater,
+            (Bound::Stable(_), Bound::Nightly(_)) => Ordering::Less,
+            (Bound::Stable(ref release1), Bound::Stable(ref release2)) => release1.cmp(release2),
+        })
     }
 }
