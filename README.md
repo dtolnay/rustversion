@@ -1,9 +1,9 @@
 Compiler version cfg
 ====================
 
-[![Build Status](https://api.travis-ci.com/dtolnay/select-rustc.svg?branch=master)](https://travis-ci.com/dtolnay/select-rustc)
-[![Latest Version](https://img.shields.io/crates/v/select-rustc.svg)](https://crates.io/crates/select-rustc)
-[![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/select-rustc)
+[![Build Status](https://api.travis-ci.com/dtolnay/rustversion.svg?branch=master)](https://travis-ci.com/dtolnay/rustversion)
+[![Latest Version](https://img.shields.io/crates/v/rustversion.svg)](https://crates.io/crates/rustversion)
+[![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/rustversion)
 
 This crate provides macros for conditional compilation according to rustc
 compiler version, analogous to [`#[cfg(...)]`][cfg] and
@@ -14,61 +14,61 @@ compiler version, analogous to [`#[cfg(...)]`][cfg] and
 
 ```toml
 [dependencies]
-select-rustc = "0.1"
+rustversion = "0.1"
 ```
 
 <br>
 
 ## Selectors
 
-- <b>`#[rustc::stable]`</b>
+- <b>`#[rustversion::stable]`</b>
   —<br>
   True on any stable compiler.
 
-- <b>`#[rustc::stable(1.34)]`</b>
+- <b>`#[rustversion::stable(1.34)]`</b>
   —<br>
   True on exactly the specified stable compiler.
 
-- <b>`#[rustc::beta]`</b>
+- <b>`#[rustversion::beta]`</b>
   —<br>
   True on any beta compiler.
 
-- <b>`#[rustc::nightly]`</b>
+- <b>`#[rustversion::nightly]`</b>
   —<br>
   True on any nightly compiler or dev build.
 
-- <b>`#[rustc::nightly(2019-01-01)]`</b>
+- <b>`#[rustversion::nightly(2019-01-01)]`</b>
   —<br>
   True on exactly one nightly.
 
-- <b>`#[rustc::since(1.34)]`</b>
+- <b>`#[rustversion::since(1.34)]`</b>
   —<br>
   True on that stable release and any later compiler, including beta and
   nightly.
 
-- <b>`#[rustc::since(2019-01-01)]`</b>
+- <b>`#[rustversion::since(2019-01-01)]`</b>
   —<br>
   True on that nightly and all newer ones.
 
-- <b>`#[rustc::before(`</b><i>version or date</i><b>`)]`</b>
+- <b>`#[rustversion::before(`</b><i>version or date</i><b>`)]`</b>
   —<br>
-  Negative of *#[rustc::since(...)]*.
+  Negative of *#[rustversion::since(...)]*.
 
-- <b>`#[rustc::not(`</b><i>selector</i><b>`)]`</b>
+- <b>`#[rustversion::not(`</b><i>selector</i><b>`)]`</b>
   —<br>
-  Negative of any selector; for example *#[rustc::not(nightly)]*.
+  Negative of any selector; for example *#[rustversion::not(nightly)]*.
 
-- <b>`#[rustc::any(`</b><i>selectors...</i><b>`)]`</b>
+- <b>`#[rustversion::any(`</b><i>selectors...</i><b>`)]`</b>
   —<br>
   True if any of the comma-separated selectors is true; for example
-  *#[rustc::any(stable, beta)]*.
+  *#[rustversion::any(stable, beta)]*.
 
-- <b>`#[rustc::all(`</b><i>selectors...</i><b>`)]`</b>
+- <b>`#[rustversion::all(`</b><i>selectors...</i><b>`)]`</b>
   —<br>
   True if all of the comma-separated selectors are true; for example
-  *#[rustc::all(since(1.31), before(1.34))]*.
+  *#[rustversion::all(since(1.31), before(1.34))]*.
 
-- <b>`#[rustc::attr(`</b><i>selector</i><b>`, `</b><i>attribute</i><b>`)]`</b>
+- <b>`#[rustversion::attr(`</b><i>selector</i><b>`, `</b><i>attribute</i><b>`)]`</b>
   —<br>
   For conditional inclusion of attributes; analogous to `cfg_attr`.
 
@@ -83,10 +83,10 @@ stabilized in [Rust 1.33][pin]:
 [pin]: https://blog.rust-lang.org/2019/02/28/Rust-1.33.0.html#pinning
 
 ```rust
-#[rustc::since(1.33)]
+#[rustversion::since(1.33)]
 use std::pin::Pin;
 
-#[rustc::since(1.33)]
+#[rustversion::since(1.33)]
 impl<P: MyTrait> MyTrait for Pin<P> {
     /* ... */
 }
@@ -98,8 +98,8 @@ Similar but for language features; the ability to control alignment greater than
 [packed]: https://github.com/rust-lang/rust/blob/master/RELEASES.md#version-1330-2019-02-28
 
 ```rust
-#[rustc::attr(before(1.33), repr(packed))]
-#[rustc::attr(since(1.33), repr(packed(2)))]
+#[rustversion::attr(before(1.33), repr(packed))]
+#[rustversion::attr(since(1.33), repr(packed(2)))]
 struct Six(i16, i32);
 
 fn main() {
@@ -109,12 +109,12 @@ fn main() {
 
 Augmenting code with `const` as const impls are stabilized in the standard
 library. This use of `const` as an attribute is recognized as a special case by
-the rustc::attr macro.
+the rustversion::attr macro.
 
 ```rust
 use std::time::Duration;
 
-#[rustc::attr(since(1.32), const)]
+#[rustversion::attr(since(1.32), const)]
 fn duration_as_days(dur: Duration) -> u64 {
     dur.as_secs() / 60 / 60 / 24
 }

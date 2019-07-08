@@ -10,76 +10,76 @@
 //! # Selectors
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
-//!   <b><code>#[rustc::stable]</code></b>
+//!   <b><code>#[rustversion::stable]</code></b>
 //!   —<br>
 //!   True on any stable compiler.
 //!   </p>
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
-//!   <b><code>#[rustc::stable(1.34)]</code></b>
+//!   <b><code>#[rustversion::stable(1.34)]</code></b>
 //!   —<br>
 //!   True on exactly the specified stable compiler.
 //!   </p>
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
-//!   <b><code>#[rustc::beta]</code></b>
+//!   <b><code>#[rustversion::beta]</code></b>
 //!   —<br>
 //!   True on any beta compiler.
 //!   </p>
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
-//!   <b><code>#[rustc::nightly]</code></b>
+//!   <b><code>#[rustversion::nightly]</code></b>
 //!   —<br>
 //!   True on any nightly compiler or dev build.
 //!   </p>
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
-//!   <b><code>#[rustc::nightly(2019-01-01)]</code></b>
+//!   <b><code>#[rustversion::nightly(2019-01-01)]</code></b>
 //!   —<br>
 //!   True on exactly one nightly.
 //!   </p>
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
-//!   <b><code>#[rustc::since(1.34)]</code></b>
+//!   <b><code>#[rustversion::since(1.34)]</code></b>
 //!   —<br>
 //!   True on that stable release and any later compiler, including beta and
 //!   nightly.
 //!   </p>
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
-//!   <b><code>#[rustc::since(2019-01-01)]</code></b>
+//!   <b><code>#[rustversion::since(2019-01-01)]</code></b>
 //!   —<br>
 //!   True on that nightly and all newer ones.
 //!   </p>
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
-//!   <b><code>#[rustc::before(</code></b><i>version or date</i><b><code>)]</code></b>
+//!   <b><code>#[rustversion::before(</code></b><i>version or date</i><b><code>)]</code></b>
 //!   —<br>
-//!   Negative of <i>#[rustc::since(...)]</i>.
+//!   Negative of <i>#[rustversion::since(...)]</i>.
 //!   </p>
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
-//!   <b><code>#[rustc::not(</code></b><i>selector</i><b><code>)]</code></b>
+//!   <b><code>#[rustversion::not(</code></b><i>selector</i><b><code>)]</code></b>
 //!   —<br>
-//!   Negative of any selector; for example <i>#[rustc::not(nightly)]</i>.
+//!   Negative of any selector; for example <i>#[rustversion::not(nightly)]</i>.
 //!   </p>
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
-//!   <b><code>#[rustc::any(</code></b><i>selectors...</i><b><code>)]</code></b>
+//!   <b><code>#[rustversion::any(</code></b><i>selectors...</i><b><code>)]</code></b>
 //!   —<br>
 //!   True if any of the comma-separated selectors is true; for example
-//!   <i>#[rustc::any(stable, beta)]</i>.
+//!   <i>#[rustversion::any(stable, beta)]</i>.
 //!   </p>
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
-//!   <b><code>#[rustc::all(</code></b><i>selectors...</i><b><code>)]</code></b>
+//!   <b><code>#[rustversion::all(</code></b><i>selectors...</i><b><code>)]</code></b>
 //!   —<br>
 //!   True if all of the comma-separated selectors are true; for example
-//!   <i>#[rustc::all(since(1.31), before(1.34))]</i>.
+//!   <i>#[rustversion::all(since(1.31), before(1.34))]</i>.
 //!   </p>
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
-//!   <b><code>#[rustc::attr(</code></b><i>selector</i><b><code>, </code></b><i>attribute</i><b><code>)]</code></b>
+//!   <b><code>#[rustversion::attr(</code></b><i>selector</i><b><code>, </code></b><i>attribute</i><b><code>)]</code></b>
 //!   —<br>
 //!   For conditional inclusion of attributes; analogous to
 //!   <code>cfg_attr</code>.
@@ -98,10 +98,10 @@
 //! ```
 //! # trait MyTrait {}
 //! #
-//! #[rustc::since(1.33)]
+//! #[rustversion::since(1.33)]
 //! use std::pin::Pin;
 //!
-//! #[rustc::since(1.33)]
+//! #[rustversion::since(1.33)]
 //! impl<P: MyTrait> MyTrait for Pin<P> {
 //!     /* ... */
 //! }
@@ -113,8 +113,8 @@
 //! [packed]: https://github.com/rust-lang/rust/blob/master/RELEASES.md#version-1330-2019-02-28
 //!
 //! ```
-//! #[rustc::attr(before(1.33), repr(packed))]
-//! #[rustc::attr(since(1.33), repr(packed(2)))]
+//! #[rustversion::attr(before(1.33), repr(packed))]
+//! #[rustversion::attr(since(1.33), repr(packed(2)))]
 //! struct Six(i16, i32);
 //!
 //! fn main() {
@@ -124,12 +124,12 @@
 //!
 //! Augmenting code with `const` as const impls are stabilized in the standard
 //! library. This use of `const` as an attribute is recognized as a special case
-//! by the rustc::attr macro.
+//! by the rustversion::attr macro.
 //!
 //! ```
 //! use std::time::Duration;
 //!
-//! #[rustc::attr(since(1.32), const)]
+//! #[rustversion::attr(since(1.32), const)]
 //! fn duration_as_days(dur: Duration) -> u64 {
 //!     dur.as_secs() / 60 / 60 / 24
 //! }

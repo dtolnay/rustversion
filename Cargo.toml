@@ -1,16 +1,15 @@
 [package]
-name = "select-rustc"
+name = "rustversion"
 version = "0.1.2"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 description = "Conditional compilation according to rustc compiler version"
-repository = "https://github.com/dtolnay/select-rustc"
-documentation = "https://docs.rs/select-rustc"
+repository = "https://github.com/dtolnay/rustversion"
+documentation = "https://docs.rs/rustversion"
 readme = "README.md"
 
 [lib]
-name = "rustc"
 proc-macro = true
 
 [dependencies]
