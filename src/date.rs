@@ -61,7 +61,9 @@ impl Parse for Date {
         input.parse::<Token![-]>()?;
         let day: LitInt = input.parse().map_err(|_| error())?;
 
-        let (year, month, day) = (year.value(), month.value(), day.value());
+        let year = year.base10_parse::<u64>().map_err(|_| error())?;
+        let month = month.base10_parse::<u64>().map_err(|_| error())?;
+        let day = day.base10_parse::<u64>().map_err(|_| error())?;
         if year >= 3000 || month > 12 || day > 31 {
             return Err(error());
         }

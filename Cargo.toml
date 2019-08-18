@@ -13,6 +13,6 @@ readme = "README.md"
 proc-macro = true
 
 [dependencies]
-proc-macro2 = "0.4"
-quote = "0.6.8"
-syn = { version = "0.15.25", features = ["full"] }
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "1.0", features = ["full"] }

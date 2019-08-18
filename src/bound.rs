@@ -42,7 +42,7 @@ impl Parse for Release {
 
         let patch = if input.parse::<Option<Token![.]>>()?.is_some() {
             let int: LitInt = input.parse().map_err(|_| error())?;
-            Some(int.value().to_string().parse().map_err(|_| error())?)
+            Some(int.base10_parse().map_err(|_| error())?)
         } else {
             None
         };

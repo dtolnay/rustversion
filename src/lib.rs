@@ -240,7 +240,7 @@ fn try_attr(args: attr::Args, input: TokenStream) -> Result<TokenStream> {
     match args.then {
         Then::Const(const_token) => {
             let mut input: ItemFn = syn::parse(input)?;
-            input.constness = Some(const_token);
+            input.sig.constness = Some(const_token);
             Ok(TokenStream::from(quote!(#input)))
         }
         Then::Attribute(then) => {
