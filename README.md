@@ -14,7 +14,7 @@ compiler version, analogous to [`#[cfg(...)]`][cfg] and
 
 ```toml
 [dependencies]
-rustversion = "0.1"
+rustversion = "1.0"
 ```
 
 <br>
