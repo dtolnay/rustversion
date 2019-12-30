@@ -85,22 +85,20 @@ fn parse(string: &str) -> Option<Version> {
         None => Stable,
         Some(channel) if channel == "dev" => Dev,
         Some(channel) if channel.starts_with("beta") => Beta,
-        Some(channel) if channel == "nightly" => {
-            match words.next() {
-                Some(hash) => {
-                    if !hash.starts_with('(') {
-                        return None;
-                    }
-                    let date = words.next()?;
-                    if !date.ends_with(')') {
-                        return None;
-                    }
-                    let date = Date::from_str(&date[..date.len() - 1]).ok()?;
-                    Nightly(date)
+        Some(channel) if channel == "nightly" => match words.next() {
+            Some(hash) => {
+                if !hash.starts_with('(') {
+                    return None;
                 }
-                None => Dev,
+                let date = words.next()?;
+                if !date.ends_with(')') {
+                    return None;
+                }
+                let date = Date::from_str(&date[..date.len() - 1]).ok()?;
+                Nightly(date)
             }
-        }
+            None => Dev,
+        },
         Some(_) => return None,
     };
 
