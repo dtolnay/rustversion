@@ -86,16 +86,20 @@ fn parse(string: &str) -> Option<Version> {
         Some(channel) if channel == "dev" => Dev,
         Some(channel) if channel.starts_with("beta") => Beta,
         Some(channel) if channel == "nightly" => {
-            let hash = words.next()?;
-            if !hash.starts_with('(') {
-                return None;
+            match words.next() {
+                Some(hash) => {
+                    if !hash.starts_with('(') {
+                        return None;
+                    }
+                    let date = words.next()?;
+                    if !date.ends_with(')') {
+                        return None;
+                    }
+                    let date = Date::from_str(&date[..date.len() - 1]).ok()?;
+                    Nightly(date)
+                }
+                None => Dev,
             }
-            let date = words.next()?;
-            if !date.ends_with(')') {
-                return None;
-            }
-            let date = Date::from_str(&date[..date.len() - 1]).ok()?;
-            Nightly(date)
         }
         Some(_) => return None,
     };
@@ -156,6 +160,14 @@ fn test_parse() {
         ),
         (
             "rustc 1.36.0-dev",
+            Version {
+                minor: 36,
+                patch: 0,
+                channel: Dev,
+            },
+        ),
+        (
+            "rustc 1.36.0-nightly",
             Version {
                 minor: 36,
                 patch: 0,
