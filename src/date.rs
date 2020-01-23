@@ -1,7 +1,5 @@
 use crate::time;
 use std::fmt::{self, Display};
-use std::num::ParseIntError;
-use std::str::FromStr;
 use syn::parse::{Error, Parse, ParseStream};
 use syn::{LitInt, Token};
 
@@ -19,29 +17,6 @@ impl Display for Date {
             "{:04}-{:02}-{:02}",
             self.year, self.month, self.day,
         )
-    }
-}
-
-pub struct ParseDateError;
-
-impl From<ParseIntError> for ParseDateError {
-    fn from(_err: ParseIntError) -> Self {
-        ParseDateError
-    }
-}
-
-impl FromStr for Date {
-    type Err = ParseDateError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut date = s.split('-');
-        let year = date.next().ok_or(ParseDateError)?.parse()?;
-        let month = date.next().ok_or(ParseDateError)?.parse()?;
-        let day = date.next().ok_or(ParseDateError)?.parse()?;
-        match date.next() {
-            None => Ok(Date { year, month, day }),
-            Some(_) => Err(ParseDateError),
-        }
     }
 }
 
