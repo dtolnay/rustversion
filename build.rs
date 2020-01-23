@@ -9,7 +9,7 @@ fn main() {
     let output = Command::new(rustc)
         .arg("--version")
         .output()
-        .expect("Failed to exec rustc");
+        .expect("failed to run `rustc --version`");
 
     let string = String::from_utf8(output.stdout).expect("rustc output not utf8");
     let dir = env::var_os("OUT_DIR").expect("OUT_DIR not set");

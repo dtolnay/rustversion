@@ -1,5 +1,4 @@
 use std::fmt::{self, Display};
-use std::io;
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 
@@ -11,7 +10,6 @@ const RUSTC_VERSION: &str = include_str!(concat!(env!("OUT_DIR"), "/version.txt"
 
 #[derive(Debug)]
 pub enum Error {
-    Exec(io::Error),
     Utf8(FromUtf8Error),
     Parse,
 }
@@ -23,7 +21,6 @@ impl Display for Error {
         use self::Error::*;
 
         match self {
-            Exec(e) => write!(f, "failed to run `rustc --version`: {}", e),
             Utf8(e) => write!(f, "failed to parse output of `rustc --version`: {}", e),
             Parse => write!(
                 f,
