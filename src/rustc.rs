@@ -47,10 +47,7 @@ impl From<Error> for syn::Error {
 }
 
 pub fn version() -> Result<Version> {
-    match parse(RUSTC_VERSION) {
-        Some(version) => Ok(version),
-        None => Err(Error::Parse),
-    }
+    parse(RUSTC_VERSION).ok_or(Error::Parse)
 }
 
 fn parse(string: &str) -> Option<Version> {
