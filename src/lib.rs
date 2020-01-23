@@ -143,16 +143,19 @@ mod attr;
 mod bound;
 mod date;
 mod expr;
-mod rustc;
 mod time;
 mod version;
 
 use crate::attr::Then;
+use crate::date::Date;
 use crate::expr::Expr;
+use crate::version::{Channel::*, Version};
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::quote;
 use syn::{parse_macro_input, ItemFn, Result};
+
+const RUSTVERSION: Version = include!(concat!(env!("OUT_DIR"), "/version.rs"));
 
 #[proc_macro_attribute]
 pub fn stable(args: TokenStream, input: TokenStream) -> TokenStream {
@@ -211,9 +214,8 @@ fn try_cfg(top: &str, args: TokenStream, input: TokenStream) -> Result<TokenStre
     }
 
     let expr: Expr = syn::parse2(full_args)?;
-    let version = rustc::version()?;
 
-    if expr.eval(version) {
+    if expr.eval(RUSTVERSION) {
         Ok(input)
     } else {
         Ok(TokenStream::new())
@@ -231,9 +233,7 @@ pub fn attr(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 fn try_attr(args: attr::Args, input: TokenStream) -> Result<TokenStream> {
-    let version = rustc::version()?;
-
-    if !args.condition.eval(version) {
+    if !args.condition.eval(RUSTVERSION) {
         return Ok(input);
     }
 

@@ -1,53 +1,28 @@
-use std::fmt::{self, Display};
-use std::str::FromStr;
-use std::string::FromUtf8Error;
-
-use crate::date::Date;
-use crate::version::{Channel::*, Version};
-use proc_macro2::Span;
-
-const RUSTC_VERSION: &str = include_str!(concat!(env!("OUT_DIR"), "/version.txt"));
+use self::Channel::*;
 
 #[derive(Debug)]
-pub enum Error {
-    Utf8(FromUtf8Error),
-    Parse,
+pub struct Version {
+    pub minor: u16,
+    pub patch: u16,
+    pub channel: Channel,
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
-
-impl Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use self::Error::*;
-
-        match self {
-            Utf8(e) => write!(f, "failed to parse output of `rustc --version`: {}", e),
-            Parse => write!(
-                f,
-                "unexpected output from `rustc --version`, please file an issue: {:?}",
-                RUSTC_VERSION,
-            ),
-        }
-    }
+#[derive(Debug)]
+pub enum Channel {
+    Stable,
+    Beta,
+    Nightly(Date),
+    Dev,
 }
 
-impl From<FromUtf8Error> for Error {
-    fn from(err: FromUtf8Error) -> Self {
-        Error::Utf8(err)
-    }
+#[derive(Debug)]
+pub struct Date {
+    pub year: u16,
+    pub month: u8,
+    pub day: u8,
 }
 
-impl From<Error> for syn::Error {
-    fn from(err: Error) -> Self {
-        syn::Error::new(Span::call_site(), err)
-    }
-}
-
-pub fn version() -> Result<Version> {
-    parse(RUSTC_VERSION).ok_or(Error::Parse)
-}
-
-fn parse(string: &str) -> Option<Version> {
+pub fn parse(string: &str) -> Option<Version> {
     let last_line = string.lines().last().unwrap_or(&string);
     let mut words = last_line.trim().split(' ');
 
@@ -80,8 +55,14 @@ fn parse(string: &str) -> Option<Version> {
                 if !date.ends_with(')') {
                     return None;
                 }
-                let date = Date::from_str(&date[..date.len() - 1]).ok()?;
-                Nightly(date)
+                let mut date = date[..date.len() - 1].split('-');
+                let year = date.next()?.parse().ok()?;
+                let month = date.next()?.parse().ok()?;
+                let day = date.next()?.parse().ok()?;
+                match date.next() {
+                    None => Nightly(Date { year, month, day }),
+                    Some(_) => return None,
+                }
             }
             None => Dev,
         },
