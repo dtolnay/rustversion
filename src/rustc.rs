@@ -13,7 +13,7 @@ const RUSTC_VERSION: &str = include_str!(concat!(env!("OUT_DIR"), "/version.txt"
 pub enum Error {
     Exec(io::Error),
     Utf8(FromUtf8Error),
-    Parse(String),
+    Parse(&'static str),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -49,7 +49,7 @@ impl From<Error> for syn::Error {
 pub fn version() -> Result<Version> {
     match parse(RUSTC_VERSION) {
         Some(version) => Ok(version),
-        None => Err(Error::Parse(RUSTC_VERSION.to_string())),
+        None => Err(Error::Parse(RUSTC_VERSION)),
     }
 }
 
