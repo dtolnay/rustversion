@@ -13,7 +13,7 @@ const RUSTC_VERSION: &str = include_str!(concat!(env!("OUT_DIR"), "/version.txt"
 pub enum Error {
     Exec(io::Error),
     Utf8(FromUtf8Error),
-    Parse(&'static str),
+    Parse,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -25,10 +25,10 @@ impl Display for Error {
         match self {
             Exec(e) => write!(f, "failed to run `rustc --version`: {}", e),
             Utf8(e) => write!(f, "failed to parse output of `rustc --version`: {}", e),
-            Parse(string) => write!(
+            Parse => write!(
                 f,
                 "unexpected output from `rustc --version`, please file an issue: {:?}",
-                string,
+                RUSTC_VERSION,
             ),
         }
     }
@@ -49,7 +49,7 @@ impl From<Error> for syn::Error {
 pub fn version() -> Result<Version> {
     match parse(RUSTC_VERSION) {
         Some(version) => Ok(version),
-        None => Err(Error::Parse(RUSTC_VERSION)),
+        None => Err(Error::Parse),
     }
 }
 
