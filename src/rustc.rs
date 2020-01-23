@@ -1,4 +1,3 @@
-use std::env;
 use std::fmt::{self, Display};
 use std::io;
 use std::str::FromStr;
