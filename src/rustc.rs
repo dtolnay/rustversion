@@ -1,14 +1,14 @@
 use std::env;
-use std::ffi::OsString;
 use std::fmt::{self, Display};
 use std::io;
-use std::process::Command;
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 
 use crate::date::Date;
 use crate::version::{Channel::*, Version};
 use proc_macro2::Span;
+
+const RUSTC_VERSION: &str = include_str!(concat!(env!("OUT_DIR"), "/version.txt"));
 
 #[derive(Debug)]
 pub enum Error {
@@ -48,16 +48,9 @@ impl From<Error> for syn::Error {
 }
 
 pub fn version() -> Result<Version> {
-    let rustc = env::var_os("RUSTC").unwrap_or_else(|| OsString::from("rustc"));
-    let output = Command::new(rustc)
-        .arg("--version")
-        .output()
-        .map_err(Error::Exec)?;
-    let string = String::from_utf8(output.stdout)?;
-
-    match parse(&string) {
+    match parse(RUSTC_VERSION) {
         Some(version) => Ok(version),
-        None => Err(Error::Parse(string)),
+        None => Err(Error::Parse(RUSTC_VERSION.to_string())),
     }
 }
 
