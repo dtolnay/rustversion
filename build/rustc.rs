@@ -26,8 +26,10 @@ pub struct Date {
 }
 
 pub fn parse(string: &str) -> Option<Version> {
-    let last_line = string.lines().last().unwrap_or(&string);
-    let mut words = last_line.trim().split(' ');
+    let rustc_line = string
+        .lines()
+        .find(|l| l.trim_start().starts_with("rustc "))?;
+    let mut words = rustc_line.trim().split(' ');
 
     if words.next()? != "rustc" {
         return None;

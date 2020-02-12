@@ -8,11 +8,17 @@ use std::process::{self, Command};
 
 fn main() {
     let rustc = env::var_os("RUSTC").unwrap_or_else(|| OsString::from("rustc"));
-    let output = match Command::new(&rustc).arg("--version").output() {
+    let output = match Command::new(&rustc)
+        .args(&["--version", "--verbose"])
+        .output()
+    {
         Ok(output) => output,
         Err(e) => {
             let rustc = rustc.to_string_lossy();
-            eprintln!("Error: failed to run `{} --version`: {}", rustc, e);
+            eprintln!(
+                "Error: failed to run `{} --version --verbose`: {}",
+                rustc, e
+            );
             process::exit(1);
         }
     };
