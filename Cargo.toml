@@ -13,9 +13,6 @@ build = "build/build.rs"
 [lib]
 proc-macro = true
 
-[badges]
-travis-ci = { repository = "dtolnay/rustversion" }
-
 [dependencies]
 proc-macro2 = "1.0"
 quote = "1.0"
