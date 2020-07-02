@@ -8,9 +8,10 @@ pub struct Version {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+#[allow(dead_code)] // Only one of these variants is ever constructed per build
 pub enum Channel {
-    Stable,
-    Beta,
+    Stable(Option<Date>),
+    Beta(Option<Date>),
     Nightly(Date),
     Dev,
 }

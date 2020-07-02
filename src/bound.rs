@@ -55,7 +55,7 @@ impl PartialEq<Bound> for Version {
     fn eq(&self, rhs: &Bound) -> bool {
         match rhs {
             Bound::Nightly(date) => match self.channel {
-                Stable | Beta | Dev => false,
+                Stable(_) | Beta(_) | Dev => false,
                 Nightly(nightly) => nightly == *date,
             },
             Bound::Stable(release) => {
@@ -70,7 +70,7 @@ impl PartialOrd<Bound> for Version {
     fn partial_cmp(&self, rhs: &Bound) -> Option<Ordering> {
         match rhs {
             Bound::Nightly(date) => match self.channel {
-                Stable | Beta => Some(Ordering::Less),
+                Stable(_) | Beta(_) => Some(Ordering::Less),
                 Nightly(nightly) => Some(nightly.cmp(date)),
                 Dev => Some(Ordering::Greater),
             },

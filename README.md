@@ -51,9 +51,18 @@ rustversion = "1.0"
   —<br>
   True on that nightly and all newer ones.
 
+- <b>`#[rustversion::since_date(2019-01-01)]`</b>
+  —<br>
+  True on all compilers built on or after that date (stable, beta, and nightly).  
+  Dev builds are considered to be built after all dates.
+
 - <b>`#[rustversion::before(`</b><i>version or date</i><b>`)]`</b>
   —<br>
   Negative of *#[rustversion::since(...)]*.
+
+- <b>`#[rustversion::before_date(2019-01-01)]`</b>
+  —<br>
+  Negative of *#[rustversion::since_date(...)]*.
 
 - <b>`#[rustversion::not(`</b><i>selector</i><b>`)]`</b>
   —<br>

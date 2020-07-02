@@ -11,32 +11,59 @@ pub enum Expr {
     Nightly,
     Date(Date),
     Since(Bound),
+    SinceDate(Date),
     Before(Bound),
+    BeforeDate(Date),
     Release(Release),
     Not(Box<Expr>),
     Any(Vec<Expr>),
     All(Vec<Expr>),
 }
 
+// Compat for older versions of Rust
+macro_rules! matches {
+    ($expression:expr, $( $pattern:pat )|+) => {
+        match $expression {
+            $( $pattern )|+ => true,
+            _ => false
+        }
+    }
+}
+
+
 impl Expr {
     pub fn eval(&self, rustc: Version) -> bool {
         use self::Expr::*;
 
+        let since_date = |bound_date| {
+            match rustc.channel {
+                Channel::Stable(date) | Channel::Beta(date) => {
+                    date.map_or(false, |d| d >= bound_date)
+                }
+                Channel::Nightly(date) => {
+                    date >= bound_date
+                }
+                Channel::Dev => true
+            }
+        };
+
         match self {
-            Stable => rustc.channel == Channel::Stable,
-            Beta => rustc.channel == Channel::Beta,
+            Stable => matches!(rustc.channel, Channel::Stable(_)),
+            Beta => matches!(rustc.channel, Channel::Beta(_)),
             Nightly => match rustc.channel {
                 Channel::Nightly(_) | Channel::Dev => true,
-                Channel::Stable | Channel::Beta => false,
+                Channel::Stable(_) | Channel::Beta(_) => false,
             },
             Date(date) => match rustc.channel {
                 Channel::Nightly(rustc) => rustc == *date,
-                Channel::Stable | Channel::Beta | Channel::Dev => false,
+                Channel::Stable(_) | Channel::Beta(_) | Channel::Dev => false,
             },
             Since(bound) => rustc >= *bound,
+            SinceDate(bound) => since_date(*bound),
             Before(bound) => rustc < *bound,
+            BeforeDate(bound) => !since_date(*bound),
             Release(release) => {
-                rustc.channel == Channel::Stable
+                matches!(rustc.channel, Channel::Stable(_))
                     && rustc.minor == release.minor
                     && release.patch.map_or(true, |patch| rustc.patch == patch)
             }
@@ -54,7 +81,9 @@ mod keyword {
     syn::custom_keyword!(beta);
     syn::custom_keyword!(nightly);
     syn::custom_keyword!(since);
+    syn::custom_keyword!(since_date);
     syn::custom_keyword!(before);
+    syn::custom_keyword!(before_date);
     syn::custom_keyword!(not);
     syn::custom_keyword!(any);
     syn::custom_keyword!(all);
@@ -71,8 +100,12 @@ impl Parse for Expr {
             Self::parse_nightly(input)
         } else if lookahead.peek(keyword::since) {
             Self::parse_since(input)
+        } else if lookahead.peek(keyword::since_date) {
+            Self::parse_since_date(input)
         } else if lookahead.peek(keyword::before) {
             Self::parse_before(input)
+        } else if lookahead.peek(keyword::before_date) {
+            Self::parse_before_date(input)
         } else if lookahead.peek(keyword::not) {
             Self::parse_not(input)
         } else if lookahead.peek(keyword::any) {
@@ -99,6 +132,30 @@ impl Expr {
         paren.parse::<Option<Token![,]>>()?;
 
         Ok(Expr::Date(date))
+    }
+
+    fn parse_since_date(input: ParseStream) -> Result<Self> {
+        input.parse::<keyword::since_date>()?;
+
+        let paren;
+        parenthesized!(paren in input);
+        let date: Date = paren.parse()?;
+        paren.parse::<Option<Token![,]>>()?;
+
+        Ok(Expr::SinceDate(date))
+
+    }
+
+    fn parse_before_date(input: ParseStream) -> Result<Self> {
+        input.parse::<keyword::before_date>()?;
+
+        let paren;
+        parenthesized!(paren in input);
+        let date: Date = paren.parse()?;
+        paren.parse::<Option<Token![,]>>()?;
+
+        Ok(Expr::BeforeDate(date))
+
     }
 
     fn parse_beta(input: ParseStream) -> Result<Self> {

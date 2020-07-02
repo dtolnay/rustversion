@@ -11,8 +11,8 @@ pub struct Version {
 #[derive(Debug)]
 #[cfg_attr(test, derive(PartialEq))]
 pub enum Channel {
-    Stable,
-    Beta,
+    Stable(Option<Date>),
+    Beta(Option<Date>),
     Nightly(Date),
     Dev,
 }
@@ -45,28 +45,30 @@ pub fn parse(string: &str) -> Option<Version> {
     let minor = digits.next()?.parse().ok()?;
     let patch = digits.next().unwrap_or("0").parse().ok()?;
 
+    let date = words.next().and_then(|hash| {
+        if !hash.starts_with('(') {
+            return None;
+        }
+        let date = words.next()?;
+        if !date.ends_with(')') {
+            return None;
+        }
+        let mut date = date[..date.len() - 1].split('-');
+        let year = date.next()?.parse().ok()?;
+        let month = date.next()?.parse().ok()?;
+        let day = date.next()?.parse().ok()?;
+        match date.next() {
+            None => Some(Date { year, month, day }),
+            Some(_) => None,
+        }
+    });
+
     let channel = match channel {
-        None => Stable,
+        None => Stable(date),
         Some(channel) if channel == "dev" => Dev,
-        Some(channel) if channel.starts_with("beta") => Beta,
-        Some(channel) if channel == "nightly" => match words.next() {
-            Some(hash) => {
-                if !hash.starts_with('(') {
-                    return None;
-                }
-                let date = words.next()?;
-                if !date.ends_with(')') {
-                    return None;
-                }
-                let mut date = date[..date.len() - 1].split('-');
-                let year = date.next()?.parse().ok()?;
-                let month = date.next()?.parse().ok()?;
-                let day = date.next()?.parse().ok()?;
-                match date.next() {
-                    None => Nightly(Date { year, month, day }),
-                    Some(_) => return None,
-                }
-            }
+        Some(channel) if channel.starts_with("beta") => Beta(date),
+        Some(channel) if channel == "nightly" => match date {
+            Some(date) => Nightly(date),
             None => Dev,
         },
         Some(_) => return None,

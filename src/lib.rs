@@ -61,9 +61,22 @@
 //!   </p>
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
+//!   <b><code>#[rustversion::since_date(2019-01-01)]</code></b>
+//!   —<br>
+//!   True on all compilers built on or after that date (stable, beta, and nightly)
+//!   Dev builds are considered to be built after all dates.
+//!   </p>
+//!
+//! - <p style="margin-left:50px;text-indent:-50px">
 //!   <b><code>#[rustversion::before(</code></b><i>version or date</i><b><code>)]</code></b>
 //!   —<br>
 //!   Negative of <i>#[rustversion::since(...)]</i>.
+//!   </p>
+//!
+//! - <p style="margin-left:50px;text-indent:-50px">
+//!   <b><code>#[rustversion::before_date(2019-01-01)]</code></b>
+//!   —<br>
+//!   Negative of <i>#[rustversion::since_date(...)]</i>.
 //!   </p>
 //!
 //! - <p style="margin-left:50px;text-indent:-50px">
@@ -186,8 +199,18 @@ pub fn since(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
+pub fn since_date(args: TokenStream, input: TokenStream) -> TokenStream {
+    cfg("since_date", args, input)
+}
+
+#[proc_macro_attribute]
 pub fn before(args: TokenStream, input: TokenStream) -> TokenStream {
     cfg("before", args, input)
+}
+
+#[proc_macro_attribute]
+pub fn before_date(args: TokenStream, input: TokenStream) -> TokenStream {
+    cfg("before_date", args, input)
 }
 
 #[proc_macro_attribute]

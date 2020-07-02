@@ -8,7 +8,11 @@ fn test_parse() {
             Version {
                 minor: 0,
                 patch: 0,
-                channel: Stable,
+                channel: Stable(Some(Date {
+                    year: 2015,
+                    month: 5,
+                    day: 13
+                })),
             },
         ),
         (
@@ -16,7 +20,7 @@ fn test_parse() {
             Version {
                 minor: 18,
                 patch: 0,
-                channel: Stable,
+                channel: Stable(None),
             },
         ),
         (
@@ -24,7 +28,11 @@ fn test_parse() {
             Version {
                 minor: 24,
                 patch: 1,
-                channel: Stable,
+                channel: Stable(Some(Date {
+                    year: 2018,
+                    month: 2,
+                    day: 27
+                })),
             },
         ),
         (
@@ -32,7 +40,11 @@ fn test_parse() {
             Version {
                 minor: 35,
                 patch: 0,
-                channel: Beta,
+                channel: Beta(Some(Date {
+                    year: 2019,
+                    month: 4,
+                    day: 27
+                })),
             },
         ),
         (
