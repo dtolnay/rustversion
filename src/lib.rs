@@ -149,6 +149,7 @@ extern crate proc_macro;
 
 mod attr;
 mod bound;
+mod constfn;
 mod date;
 mod expr;
 mod time;
@@ -160,7 +161,7 @@ use crate::version::Version;
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::quote;
-use syn::{parse_macro_input, ItemFn, Result};
+use syn::{parse_macro_input, Result};
 
 const RUSTVERSION: Version = include!(concat!(env!("OUT_DIR"), "/version.rs"));
 
@@ -245,11 +246,7 @@ fn try_attr(args: attr::Args, input: TokenStream) -> Result<TokenStream> {
     }
 
     match args.then {
-        Then::Const(const_token) => {
-            let mut input: ItemFn = syn::parse(input)?;
-            input.sig.constness = Some(const_token);
-            Ok(TokenStream::from(quote!(#input)))
-        }
+        Then::Const(const_token) => constfn::insert_const(input, const_token),
         Then::Attribute(then) => {
             let input = TokenStream2::from(input);
             Ok(TokenStream::from(quote! {
