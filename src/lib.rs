@@ -153,6 +153,7 @@ mod constfn;
 mod date;
 mod expr;
 mod iter;
+mod release;
 mod time;
 mod version;
 

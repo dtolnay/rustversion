@@ -1,5 +1,6 @@
-use crate::bound::{Bound, Release};
+use crate::bound::Bound;
 use crate::date::Date;
+use crate::release::Release;
 use crate::version::{Channel, Version};
 use syn::parse::{Parse, ParseStream, Result};
 use syn::punctuated::Punctuated;
