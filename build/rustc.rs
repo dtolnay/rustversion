@@ -1,6 +1,6 @@
 use self::Channel::*;
+use std::fmt::{self, Debug};
 
-#[derive(Debug)]
 #[cfg_attr(test, derive(PartialEq))]
 pub struct Version {
     pub minor: u16,
@@ -8,7 +8,6 @@ pub struct Version {
     pub channel: Channel,
 }
 
-#[derive(Debug)]
 #[cfg_attr(test, derive(PartialEq))]
 pub enum Channel {
     Stable,
@@ -17,7 +16,6 @@ pub enum Channel {
     Dev,
 }
 
-#[derive(Debug)]
 #[cfg_attr(test, derive(PartialEq))]
 pub struct Date {
     pub year: u16,
@@ -77,4 +75,40 @@ pub fn parse(string: &str) -> Option<Version> {
         patch,
         channel,
     })
+}
+
+impl Debug for Version {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter
+            .debug_struct("crate::version::Version")
+            .field("minor", &self.minor)
+            .field("patch", &self.patch)
+            .field("channel", &self.channel)
+            .finish()
+    }
+}
+
+impl Debug for Channel {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Channel::Stable => formatter.write_str("crate::version::Channel::Stable"),
+            Channel::Beta => formatter.write_str("crate::version::Channel::Beta"),
+            Channel::Nightly(date) => formatter
+                .debug_tuple("crate::version::Channel::Nightly")
+                .field(date)
+                .finish(),
+            Channel::Dev => formatter.write_str("crate::version::Channel::Dev"),
+        }
+    }
+}
+
+impl Debug for Date {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter
+            .debug_struct("crate::date::Date")
+            .field("year", &self.year)
+            .field("month", &self.month)
+            .field("day", &self.day)
+            .finish()
+    }
 }

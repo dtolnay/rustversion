@@ -155,9 +155,8 @@ mod time;
 mod version;
 
 use crate::attr::Then;
-use crate::date::Date;
 use crate::expr::Expr;
-use crate::version::{Channel::*, Version};
+use crate::version::Version;
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::quote;
