@@ -1,7 +1,8 @@
 use crate::time;
+use proc_macro2::Literal;
 use std::fmt::{self, Display};
 use syn::parse::{Error, Parse, ParseStream};
-use syn::{LitInt, Token};
+use syn::Token;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Date {
@@ -30,15 +31,15 @@ impl Parse for Date {
             )
         };
 
-        let year: LitInt = input.parse().map_err(|_| error())?;
+        let year: Literal = input.parse().map_err(|_| error())?;
         input.parse::<Token![-]>()?;
-        let month: LitInt = input.parse().map_err(|_| error())?;
+        let month: Literal = input.parse().map_err(|_| error())?;
         input.parse::<Token![-]>()?;
-        let day: LitInt = input.parse().map_err(|_| error())?;
+        let day: Literal = input.parse().map_err(|_| error())?;
 
-        let year = year.base10_parse::<u64>().map_err(|_| error())?;
-        let month = month.base10_parse::<u64>().map_err(|_| error())?;
-        let day = day.base10_parse::<u64>().map_err(|_| error())?;
+        let year = year.to_string().parse::<u64>().map_err(|_| error())?;
+        let month = month.to_string().parse::<u64>().map_err(|_| error())?;
+        let day = day.to_string().parse::<u64>().map_err(|_| error())?;
         if year >= 3000 || month > 12 || day > 31 {
             return Err(error());
         }
