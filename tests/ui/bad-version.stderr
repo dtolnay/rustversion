@@ -3,3 +3,9 @@ error: expected rustc release number, like 1.31
   |
 1 | #[rustversion::stable(nightly)]
   |                       ^^^^^^^
+
+error: expected rustc release number, like 1.31
+ --> $DIR/bad-version.rs:4:27
+  |
+4 | #[rustversion::any(stable(nightly))]
+  |                           ^^^^^^^

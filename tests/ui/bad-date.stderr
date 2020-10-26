@@ -3,3 +3,9 @@ error: expected nightly date, like 2020-10-26
   |
 1 | #[rustversion::nightly(stable)]
   |                        ^^^^^^
+
+error: expected nightly date, like 2020-10-26
+ --> $DIR/bad-date.rs:4:28
+  |
+4 | #[rustversion::any(nightly(stable))]
+  |                            ^^^^^^
