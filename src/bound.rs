@@ -1,9 +1,9 @@
 use crate::date::Date;
 use crate::version::{Channel::*, Version};
-use quote::quote;
+use proc_macro2::Literal;
 use std::cmp::Ordering;
 use syn::parse::{Error, Parse, ParseStream, Result};
-use syn::{LitFloat, LitInt, Token};
+use syn::Token;
 
 pub enum Bound {
     Nightly(Date),
@@ -31,8 +31,8 @@ impl Parse for Release {
         let span = input.cursor().token_stream();
         let error = || Error::new_spanned(&span, "expected rustc release number, like 1.31");
 
-        let major_minor: LitFloat = input.parse().map_err(|_| error())?;
-        let string = quote!(#major_minor).to_string();
+        let major_minor: Literal = input.parse().map_err(|_| error())?;
+        let string = major_minor.to_string();
 
         if !string.starts_with("1.") {
             return Err(error());
@@ -41,8 +41,8 @@ impl Parse for Release {
         let minor: u16 = string[2..].parse().map_err(|_| error())?;
 
         let patch = if input.parse::<Option<Token![.]>>()?.is_some() {
-            let int: LitInt = input.parse().map_err(|_| error())?;
-            Some(int.base10_parse().map_err(|_| error())?)
+            let int: Literal = input.parse().map_err(|_| error())?;
+            Some(int.to_string().parse().map_err(|_| error())?)
         } else {
             None
         };
