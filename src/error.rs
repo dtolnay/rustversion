@@ -31,7 +31,7 @@ impl Error {
         Self::new2(begin, end, msg)
     }
 
-    pub fn to_compile_error(&self) -> TokenStream {
+    pub fn into_compile_error(self) -> TokenStream {
         // compile_error! { $msg }
         TokenStream::from_iter(vec![
             TokenTree::Ident(Ident::new("compile_error", self.begin)),

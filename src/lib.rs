@@ -160,7 +160,7 @@ mod token;
 mod version;
 
 use crate::attr::Then;
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::version::Version;
 use proc_macro::{Delimiter, Group, Ident, Punct, Spacing, Span, TokenStream, TokenTree};
 use std::iter::FromIterator;
@@ -208,10 +208,7 @@ pub fn all(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 fn cfg(introducer: &str, args: TokenStream, input: TokenStream) -> TokenStream {
-    match try_cfg(introducer, args, input) {
-        Ok(tokens) => tokens,
-        Err(err) => TokenStream::from(err.to_compile_error()),
-    }
+    try_cfg(introducer, args, input).unwrap_or_else(Error::into_compile_error)
 }
 
 fn try_cfg(introducer: &str, args: TokenStream, input: TokenStream) -> Result<TokenStream> {
@@ -238,10 +235,9 @@ fn try_cfg(introducer: &str, args: TokenStream, input: TokenStream) -> Result<To
 
 #[proc_macro_attribute]
 pub fn attr(args: TokenStream, input: TokenStream) -> TokenStream {
-    match attr::parse(args).and_then(|args| try_attr(args, input)) {
-        Ok(tokens) => tokens,
-        Err(err) => TokenStream::from(err.to_compile_error()),
-    }
+    attr::parse(args)
+        .and_then(|args| try_attr(args, input))
+        .unwrap_or_else(Error::into_compile_error)
 }
 
 fn try_attr(args: attr::Args, input: TokenStream) -> Result<TokenStream> {
