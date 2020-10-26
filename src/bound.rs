@@ -1,23 +1,33 @@
-use crate::date::Date;
-use crate::release::Release;
+use crate::date::{self, Date};
+use crate::error::{Error, Result};
+use crate::iter::Iter;
+use crate::release::{self, Release};
+use crate::time;
 use crate::version::{Channel::*, Version};
+use proc_macro::{Group, TokenTree};
 use std::cmp::Ordering;
-use syn::parse::{Parse, ParseStream, Result};
-use syn::Token;
 
 pub enum Bound {
     Nightly(Date),
     Stable(Release),
 }
 
-impl Parse for Bound {
-    fn parse(input: ParseStream) -> Result<Self> {
-        if input.peek2(Token![-]) {
-            input.parse().map(Bound::Nightly)
-        } else {
-            input.parse().map(Bound::Stable)
+pub fn parse(paren: Group, iter: Iter) -> Result<Bound> {
+    if let Some(TokenTree::Literal(literal)) = iter.peek() {
+        let repr = literal.to_string();
+        if repr.starts_with(|ch: char| ch.is_ascii_digit()) {
+            if repr.contains('.') {
+                return release::parse(paren, iter).map(Bound::Stable);
+            } else {
+                return date::parse(paren, iter).map(Bound::Nightly);
+            }
         }
     }
+    let msg = format!(
+        "expected rustc release number like 1.31, or nightly date like {}",
+        time::today(),
+    );
+    Err(Error::group(paren, msg))
 }
 
 impl PartialEq<Bound> for Version {

@@ -1,7 +1,7 @@
-use crate::expr::Expr;
-use proc_macro2::TokenStream;
-use syn::parse::{Parse, ParseStream, Result};
-use syn::Token;
+use crate::error::{Error, Result};
+use crate::expr::{self, Expr};
+use crate::{iter, token};
+use proc_macro::{Span, TokenStream};
 
 pub struct Args {
     pub condition: Expr,
@@ -9,27 +9,27 @@ pub struct Args {
 }
 
 pub enum Then {
-    Const(Token![const]),
+    Const(Span),
     Attribute(TokenStream),
 }
 
-impl Parse for Args {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let condition: Expr = input.parse()?;
+pub fn parse(input: TokenStream) -> Result<Args> {
+    let ref mut input = iter::new(input);
+    let condition = expr::parse(input)?;
 
-        input.parse::<Token![,]>()?;
-        if input.is_empty() {
-            return Err(input.error("expected one or more attrs"));
-        }
-
-        let const_token: Option<Token![const]> = input.parse()?;
-        let then = if let Some(const_token) = const_token {
-            input.parse::<Option<Token![,]>>()?;
-            Then::Const(const_token)
-        } else {
-            input.parse().map(Then::Attribute)?
-        };
-
-        Ok(Args { condition, then })
+    token::parse_punct(input, ',')?;
+    if input.peek().is_none() {
+        return Err(Error::new(Span::call_site(), "expected one or more attrs"));
     }
+
+    let const_span = token::parse_optional_keyword(input, "const");
+    let then = if let Some(const_span) = const_span {
+        token::parse_optional_punct(input, ',');
+        token::parse_end(input)?;
+        Then::Const(const_span)
+    } else {
+        Then::Attribute(input.collect())
+    };
+
+    Ok(Args { condition, then })
 }
