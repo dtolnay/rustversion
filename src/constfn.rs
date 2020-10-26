@@ -1,6 +1,6 @@
-use proc_macro::{Ident, TokenStream, TokenTree};
+use crate::error::{Error, Result};
+use proc_macro::{Ident, Span, TokenStream, TokenTree};
 use std::iter;
-use syn::{Error, Result, Token};
 
 #[derive(PartialOrd, PartialEq)]
 enum Qualifiers {
@@ -22,7 +22,7 @@ impl Qualifiers {
     }
 }
 
-pub(crate) fn insert_const(input: TokenStream, const_token: Token![const]) -> Result<TokenStream> {
+pub(crate) fn insert_const(input: TokenStream, const_span: Span) -> Result<TokenStream> {
     let ref mut input = crate::iter::new(input);
     let mut out = TokenStream::new();
     let mut qualifiers = Qualifiers::None;
@@ -31,7 +31,7 @@ pub(crate) fn insert_const(input: TokenStream, const_token: Token![const]) -> Re
     while let Some(token) = input.next() {
         match token {
             TokenTree::Ident(ref ident) if ident.to_string() == "fn" => {
-                let const_ident = Ident::new("const", const_token.span.unwrap());
+                let const_ident = Ident::new("const", const_span);
                 out.extend(iter::once(TokenTree::Ident(const_ident)));
                 out.extend(pending);
                 out.extend(iter::once(token));
@@ -54,5 +54,5 @@ pub(crate) fn insert_const(input: TokenStream, const_token: Token![const]) -> Re
         }
     }
 
-    Err(Error::new(const_token.span, "only allowed on a fn item"))
+    Err(Error::new(const_span, "only allowed on a fn item"))
 }

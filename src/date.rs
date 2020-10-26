@@ -1,8 +1,8 @@
-use crate::time;
-use proc_macro2::Literal;
+use crate::error::{Error, Result};
+use crate::iter::Iter;
+use crate::{time, token};
+use proc_macro::Group;
 use std::fmt::{self, Display};
-use syn::parse::{Error, Parse, ParseStream};
-use syn::Token;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Date {
@@ -21,33 +21,30 @@ impl Display for Date {
     }
 }
 
-impl Parse for Date {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let span = input.cursor().token_stream();
-        let error = || {
-            Error::new_spanned(
-                &span,
-                format!("expected nightly date, like {}", time::today()),
-            )
-        };
+pub fn parse(paren: Group, iter: Iter) -> Result<Date> {
+    try_parse(iter).map_err(|_| {
+        let msg = format!("expected nightly date, like {}", time::today());
+        Error::group(paren, msg)
+    })
+}
 
-        let year: Literal = input.parse().map_err(|_| error())?;
-        input.parse::<Token![-]>()?;
-        let month: Literal = input.parse().map_err(|_| error())?;
-        input.parse::<Token![-]>()?;
-        let day: Literal = input.parse().map_err(|_| error())?;
+fn try_parse(iter: Iter) -> Result<Date, ()> {
+    let year = token::parse_literal(iter).map_err(drop)?;
+    token::parse_punct(iter, '-').map_err(drop)?;
+    let month = token::parse_literal(iter).map_err(drop)?;
+    token::parse_punct(iter, '-').map_err(drop)?;
+    let day = token::parse_literal(iter).map_err(drop)?;
 
-        let year = year.to_string().parse::<u64>().map_err(|_| error())?;
-        let month = month.to_string().parse::<u64>().map_err(|_| error())?;
-        let day = day.to_string().parse::<u64>().map_err(|_| error())?;
-        if year >= 3000 || month > 12 || day > 31 {
-            return Err(error());
-        }
-
-        Ok(Date {
-            year: year as u16,
-            month: month as u8,
-            day: day as u8,
-        })
+    let year = year.to_string().parse::<u64>().map_err(drop)?;
+    let month = month.to_string().parse::<u64>().map_err(drop)?;
+    let day = day.to_string().parse::<u64>().map_err(drop)?;
+    if year >= 3000 || month > 12 || day > 31 {
+        return Err(());
     }
+
+    Ok(Date {
+        year: year as u16,
+        month: month as u8,
+        day: day as u8,
+    })
 }

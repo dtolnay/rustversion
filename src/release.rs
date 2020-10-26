@@ -1,6 +1,7 @@
-use proc_macro2::Literal;
-use syn::parse::{Error, Parse, ParseStream, Result};
-use syn::Token;
+use crate::error::{Error, Result};
+use crate::iter::Iter;
+use crate::token;
+use proc_macro::Group;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Release {
@@ -8,27 +9,26 @@ pub struct Release {
     pub patch: Option<u16>,
 }
 
-impl Parse for Release {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let span = input.cursor().token_stream();
-        let error = || Error::new_spanned(&span, "expected rustc release number, like 1.31");
+pub fn parse(paren: Group, iter: Iter) -> Result<Release> {
+    try_parse(iter).map_err(|_| Error::group(paren, "expected rustc release number, like 1.31"))
+}
 
-        let major_minor: Literal = input.parse().map_err(|_| error())?;
-        let string = major_minor.to_string();
+fn try_parse(iter: Iter) -> Result<Release, ()> {
+    let major_minor = token::parse_literal(iter).map_err(drop)?;
+    let string = major_minor.to_string();
 
-        if !string.starts_with("1.") {
-            return Err(error());
-        }
-
-        let minor: u16 = string[2..].parse().map_err(|_| error())?;
-
-        let patch = if input.parse::<Option<Token![.]>>()?.is_some() {
-            let int: Literal = input.parse().map_err(|_| error())?;
-            Some(int.to_string().parse().map_err(|_| error())?)
-        } else {
-            None
-        };
-
-        Ok(Release { minor, patch })
+    if !string.starts_with("1.") {
+        return Err(());
     }
+
+    let minor: u16 = string[2..].parse().map_err(drop)?;
+
+    let patch = if token::parse_optional_punct(iter, '.').is_some() {
+        let int = token::parse_literal(iter).map_err(drop)?;
+        Some(int.to_string().parse().map_err(drop)?)
+    } else {
+        None
+    };
+
+    Ok(Release { minor, patch })
 }

@@ -1,10 +1,11 @@
-use crate::bound::Bound;
-use crate::date::Date;
-use crate::release::Release;
+use crate::bound::{self, Bound};
+use crate::date::{self, Date};
+use crate::error::{Error, Result};
+use crate::iter::{self, Iter};
+use crate::release::{self, Release};
+use crate::token;
 use crate::version::{Channel, Version};
-use syn::parse::{Parse, ParseStream, Result};
-use syn::punctuated::Punctuated;
-use syn::{parenthesized, token, Token};
+use proc_macro::{Ident, Span, TokenTree};
 
 pub enum Expr {
     Stable,
@@ -48,131 +49,115 @@ impl Expr {
     }
 }
 
-type Exprs = Punctuated<Expr, Token![,]>;
-
-mod keyword {
-    syn::custom_keyword!(stable);
-    syn::custom_keyword!(beta);
-    syn::custom_keyword!(nightly);
-    syn::custom_keyword!(since);
-    syn::custom_keyword!(before);
-    syn::custom_keyword!(not);
-    syn::custom_keyword!(any);
-    syn::custom_keyword!(all);
-}
-
-impl Parse for Expr {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let lookahead = input.lookahead1();
-        if lookahead.peek(keyword::stable) {
-            Self::parse_stable(input)
-        } else if lookahead.peek(keyword::beta) {
-            Self::parse_beta(input)
-        } else if lookahead.peek(keyword::nightly) {
-            Self::parse_nightly(input)
-        } else if lookahead.peek(keyword::since) {
-            Self::parse_since(input)
-        } else if lookahead.peek(keyword::before) {
-            Self::parse_before(input)
-        } else if lookahead.peek(keyword::not) {
-            Self::parse_not(input)
-        } else if lookahead.peek(keyword::any) {
-            Self::parse_any(input)
-        } else if lookahead.peek(keyword::all) {
-            Self::parse_all(input)
-        } else {
-            Err(lookahead.error())
+pub fn parse(iter: Iter) -> Result<Expr> {
+    match &iter.next() {
+        Some(TokenTree::Ident(i)) if i.to_string() == "stable" => parse_stable(iter),
+        Some(TokenTree::Ident(i)) if i.to_string() == "beta" => Ok(Expr::Beta),
+        Some(TokenTree::Ident(i)) if i.to_string() == "nightly" => parse_nightly(iter),
+        Some(TokenTree::Ident(i)) if i.to_string() == "since" => parse_since(i, iter),
+        Some(TokenTree::Ident(i)) if i.to_string() == "before" => parse_before(i, iter),
+        Some(TokenTree::Ident(i)) if i.to_string() == "not" => parse_not(i, iter),
+        Some(TokenTree::Ident(i)) if i.to_string() == "any" => parse_any(i, iter),
+        Some(TokenTree::Ident(i)) if i.to_string() == "all" => parse_all(i, iter),
+        unexpected => {
+            let span = unexpected
+                .as_ref()
+                .map_or_else(Span::call_site, TokenTree::span);
+            Err(Error::new(span, "expected one of `stable`, `beta`, `nightly`, `since`, `before`, `not`, `any`, `all`"))
         }
     }
 }
 
-impl Expr {
-    fn parse_nightly(input: ParseStream) -> Result<Self> {
-        input.parse::<keyword::nightly>()?;
+fn parse_nightly(iter: Iter) -> Result<Expr> {
+    let paren = match token::parse_optional_paren(iter) {
+        Some(group) => group,
+        None => return Ok(Expr::Nightly),
+    };
 
-        if !input.peek(token::Paren) {
-            return Ok(Expr::Nightly);
+    let ref mut inner = iter::new(paren.stream());
+    let date = date::parse(paren, inner)?;
+    token::parse_optional_punct(inner, ',');
+    token::parse_end(inner)?;
+
+    Ok(Expr::Date(date))
+}
+
+fn parse_stable(iter: Iter) -> Result<Expr> {
+    let paren = match token::parse_optional_paren(iter) {
+        Some(group) => group,
+        None => return Ok(Expr::Stable),
+    };
+
+    let ref mut inner = iter::new(paren.stream());
+    let release = release::parse(paren, inner)?;
+    token::parse_optional_punct(inner, ',');
+    token::parse_end(inner)?;
+
+    Ok(Expr::Release(release))
+}
+
+fn parse_since(introducer: &Ident, iter: Iter) -> Result<Expr> {
+    let paren = token::parse_paren(introducer, iter)?;
+
+    let ref mut inner = iter::new(paren.stream());
+    let bound = bound::parse(paren, inner)?;
+    token::parse_optional_punct(inner, ',');
+    token::parse_end(inner)?;
+
+    Ok(Expr::Since(bound))
+}
+
+fn parse_before(introducer: &Ident, iter: Iter) -> Result<Expr> {
+    let paren = token::parse_paren(introducer, iter)?;
+
+    let ref mut inner = iter::new(paren.stream());
+    let bound = bound::parse(paren, inner)?;
+    token::parse_optional_punct(inner, ',');
+    token::parse_end(inner)?;
+
+    Ok(Expr::Before(bound))
+}
+
+fn parse_not(introducer: &Ident, iter: Iter) -> Result<Expr> {
+    let paren = token::parse_paren(introducer, iter)?;
+
+    let ref mut inner = iter::new(paren.stream());
+    let expr = self::parse(inner)?;
+    token::parse_optional_punct(inner, ',');
+    token::parse_end(inner)?;
+
+    Ok(Expr::Not(Box::new(expr)))
+}
+
+fn parse_any(introducer: &Ident, iter: Iter) -> Result<Expr> {
+    let paren = token::parse_paren(introducer, iter)?;
+
+    let ref mut inner = iter::new(paren.stream());
+    let exprs = parse_comma_separated(inner)?;
+
+    Ok(Expr::Any(exprs.into_iter().collect()))
+}
+
+fn parse_all(introducer: &Ident, iter: Iter) -> Result<Expr> {
+    let paren = token::parse_paren(introducer, iter)?;
+
+    let ref mut inner = iter::new(paren.stream());
+    let exprs = parse_comma_separated(inner)?;
+
+    Ok(Expr::All(exprs.into_iter().collect()))
+}
+
+fn parse_comma_separated(iter: Iter) -> Result<Vec<Expr>> {
+    let mut exprs = Vec::new();
+
+    while iter.peek().is_some() {
+        let expr = self::parse(iter)?;
+        exprs.push(expr);
+        if iter.peek().is_none() {
+            break;
         }
-
-        let paren;
-        parenthesized!(paren in input);
-        let date: Date = paren.parse()?;
-        paren.parse::<Option<Token![,]>>()?;
-
-        Ok(Expr::Date(date))
+        token::parse_punct(iter, ',')?;
     }
 
-    fn parse_beta(input: ParseStream) -> Result<Self> {
-        input.parse::<keyword::beta>()?;
-
-        Ok(Expr::Beta)
-    }
-
-    fn parse_stable(input: ParseStream) -> Result<Self> {
-        input.parse::<keyword::stable>()?;
-
-        if !input.peek(token::Paren) {
-            return Ok(Expr::Stable);
-        }
-
-        let paren;
-        parenthesized!(paren in input);
-        let release: Release = paren.parse()?;
-        paren.parse::<Option<Token![,]>>()?;
-
-        Ok(Expr::Release(release))
-    }
-
-    fn parse_since(input: ParseStream) -> Result<Self> {
-        input.parse::<keyword::since>()?;
-
-        let paren;
-        parenthesized!(paren in input);
-        let bound: Bound = paren.parse()?;
-        paren.parse::<Option<Token![,]>>()?;
-
-        Ok(Expr::Since(bound))
-    }
-
-    fn parse_before(input: ParseStream) -> Result<Self> {
-        input.parse::<keyword::before>()?;
-
-        let paren;
-        parenthesized!(paren in input);
-        let bound: Bound = paren.parse()?;
-        paren.parse::<Option<Token![,]>>()?;
-
-        Ok(Expr::Before(bound))
-    }
-
-    fn parse_not(input: ParseStream) -> Result<Self> {
-        input.parse::<keyword::not>()?;
-
-        let paren;
-        parenthesized!(paren in input);
-        let expr: Expr = paren.parse()?;
-        paren.parse::<Option<Token![,]>>()?;
-
-        Ok(Expr::Not(Box::new(expr)))
-    }
-
-    fn parse_any(input: ParseStream) -> Result<Self> {
-        input.parse::<keyword::any>()?;
-
-        let paren;
-        parenthesized!(paren in input);
-        let exprs: Exprs = paren.parse_terminated(Expr::parse)?;
-
-        Ok(Expr::Any(exprs.into_iter().collect()))
-    }
-
-    fn parse_all(input: ParseStream) -> Result<Self> {
-        input.parse::<keyword::all>()?;
-
-        let paren;
-        parenthesized!(paren in input);
-        let exprs: Exprs = paren.parse_terminated(Expr::parse)?;
-
-        Ok(Expr::All(exprs.into_iter().collect()))
-    }
+    Ok(exprs)
 }

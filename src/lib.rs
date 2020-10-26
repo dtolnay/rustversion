@@ -151,19 +151,19 @@ mod attr;
 mod bound;
 mod constfn;
 mod date;
+mod error;
 mod expr;
 mod iter;
 mod release;
 mod time;
+mod token;
 mod version;
 
 use crate::attr::Then;
-use crate::expr::Expr;
+use crate::error::Result;
 use crate::version::Version;
 use proc_macro::{Delimiter, Group, Ident, Punct, Spacing, Span, TokenStream, TokenTree};
-use proc_macro2::TokenStream as TokenStream2;
 use std::iter::FromIterator;
-use syn::{parse_macro_input, Result};
 
 const RUSTVERSION: Version = include!(concat!(env!("OUT_DIR"), "/version.rs"));
 
@@ -207,17 +207,17 @@ pub fn all(args: TokenStream, input: TokenStream) -> TokenStream {
     cfg("all", args, input)
 }
 
-fn cfg(top: &str, args: TokenStream, input: TokenStream) -> TokenStream {
-    match try_cfg(top, args, input) {
+fn cfg(introducer: &str, args: TokenStream, input: TokenStream) -> TokenStream {
+    match try_cfg(introducer, args, input) {
         Ok(tokens) => tokens,
         Err(err) => TokenStream::from(err.to_compile_error()),
     }
 }
 
-fn try_cfg(top: &str, args: TokenStream, input: TokenStream) -> Result<TokenStream> {
-    let top = Ident::new(top, Span::call_site());
+fn try_cfg(introducer: &str, args: TokenStream, input: TokenStream) -> Result<TokenStream> {
+    let introducer = Ident::new(introducer, Span::call_site());
 
-    let mut full_args = TokenStream::from(TokenTree::Ident(top));
+    let mut full_args = TokenStream::from(TokenTree::Ident(introducer));
     if !args.is_empty() {
         full_args.extend(std::iter::once(TokenTree::Group(Group::new(
             Delimiter::Parenthesis,
@@ -225,7 +225,9 @@ fn try_cfg(top: &str, args: TokenStream, input: TokenStream) -> Result<TokenStre
         ))));
     }
 
-    let expr: Expr = syn::parse(full_args)?;
+    let ref mut full_args = iter::new(full_args);
+    let expr = expr::parse(full_args)?;
+    token::parse_end(full_args)?;
 
     if expr.eval(RUSTVERSION) {
         Ok(input)
@@ -236,9 +238,7 @@ fn try_cfg(top: &str, args: TokenStream, input: TokenStream) -> Result<TokenStre
 
 #[proc_macro_attribute]
 pub fn attr(args: TokenStream, input: TokenStream) -> TokenStream {
-    let args = parse_macro_input!(args as attr::Args);
-
-    match try_attr(args, input) {
+    match attr::parse(args).and_then(|args| try_attr(args, input)) {
         Ok(tokens) => tokens,
         Err(err) => TokenStream::from(err.to_compile_error()),
     }
@@ -272,7 +272,7 @@ fn try_attr(args: attr::Args, input: TokenStream) -> Result<TokenStream> {
                                         TokenTree::Punct(Punct::new(',', Spacing::Alone)),
                                     ]
                                     .into_iter()
-                                    .chain(<TokenStream as From<TokenStream2>>::from(then)),
+                                    .chain(then),
                                 ),
                             )),
                         ]),
