@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::date::Date;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -11,7 +13,6 @@ pub struct Version {
 pub enum Channel {
     Stable,
     Beta,
-    #[allow(dead_code)]
     Nightly(Date),
     Dev,
 }
