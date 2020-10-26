@@ -158,9 +158,9 @@ mod version;
 use crate::attr::Then;
 use crate::expr::Expr;
 use crate::version::Version;
-use proc_macro::TokenStream;
-use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
-use quote::quote;
+use proc_macro::{Delimiter, Group, Ident, Punct, Spacing, Span, TokenStream, TokenTree};
+use proc_macro2::TokenStream as TokenStream2;
+use std::iter::{self, FromIterator};
 use syn::{parse_macro_input, Result};
 
 const RUSTVERSION: Version = include!(concat!(env!("OUT_DIR"), "/version.rs"));
@@ -213,15 +213,17 @@ fn cfg(top: &str, args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 fn try_cfg(top: &str, args: TokenStream, input: TokenStream) -> Result<TokenStream> {
-    let args = TokenStream2::from(args);
     let top = Ident::new(top, Span::call_site());
 
-    let mut full_args = quote!(#top);
+    let mut full_args = TokenStream::from(TokenTree::Ident(top));
     if !args.is_empty() {
-        full_args.extend(quote!((#args)));
+        full_args.extend(iter::once(TokenTree::Group(Group::new(
+            Delimiter::Parenthesis,
+            args,
+        ))));
     }
 
-    let expr: Expr = syn::parse2(full_args)?;
+    let expr: Expr = syn::parse(full_args)?;
 
     if expr.eval(RUSTVERSION) {
         Ok(input)
@@ -248,11 +250,35 @@ fn try_attr(args: attr::Args, input: TokenStream) -> Result<TokenStream> {
     match args.then {
         Then::Const(const_token) => constfn::insert_const(input, const_token),
         Then::Attribute(then) => {
-            let input = TokenStream2::from(input);
-            Ok(TokenStream::from(quote! {
-                #[cfg_attr(all(), #then)]
-                #input
-            }))
+            // #[cfg_attr(all(), #then)]
+            Ok(TokenStream::from_iter(
+                vec![
+                    TokenTree::Punct(Punct::new('#', Spacing::Alone)),
+                    TokenTree::Group(Group::new(
+                        Delimiter::Bracket,
+                        TokenStream::from_iter(vec![
+                            TokenTree::Ident(Ident::new("cfg_attr", Span::call_site())),
+                            TokenTree::Group(Group::new(
+                                Delimiter::Parenthesis,
+                                TokenStream::from_iter(
+                                    vec![
+                                        TokenTree::Ident(Ident::new("all", Span::call_site())),
+                                        TokenTree::Group(Group::new(
+                                            Delimiter::Parenthesis,
+                                            TokenStream::new(),
+                                        )),
+                                        TokenTree::Punct(Punct::new(',', Spacing::Alone)),
+                                    ]
+                                    .into_iter()
+                                    .chain(<TokenStream as From<TokenStream2>>::from(then)),
+                                ),
+                            )),
+                        ]),
+                    )),
+                ]
+                .into_iter()
+                .chain(input),
+            ))
         }
     }
 }
