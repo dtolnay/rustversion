@@ -11,6 +11,7 @@ pub struct Version {
 pub enum Channel {
     Stable,
     Beta,
+    #[allow(dead_code)]
     Nightly(Date),
     Dev,
 }
