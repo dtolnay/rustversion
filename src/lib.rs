@@ -152,6 +152,7 @@ mod bound;
 mod constfn;
 mod date;
 mod expr;
+mod iter;
 mod time;
 mod version;
 
@@ -160,7 +161,7 @@ use crate::expr::Expr;
 use crate::version::Version;
 use proc_macro::{Delimiter, Group, Ident, Punct, Spacing, Span, TokenStream, TokenTree};
 use proc_macro2::TokenStream as TokenStream2;
-use std::iter::{self, FromIterator};
+use std::iter::FromIterator;
 use syn::{parse_macro_input, Result};
 
 const RUSTVERSION: Version = include!(concat!(env!("OUT_DIR"), "/version.rs"));
@@ -217,7 +218,7 @@ fn try_cfg(top: &str, args: TokenStream, input: TokenStream) -> Result<TokenStre
 
     let mut full_args = TokenStream::from(TokenTree::Ident(top));
     if !args.is_empty() {
-        full_args.extend(iter::once(TokenTree::Group(Group::new(
+        full_args.extend(std::iter::once(TokenTree::Group(Group::new(
             Delimiter::Parenthesis,
             args,
         ))));
