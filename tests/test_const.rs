@@ -25,3 +25,13 @@ macro_rules! ident {
 
 ident! {fn}
 const _IDENT: () = _ident();
+
+#[rustversion::attr(all(), const)]
+/// doc
+fn _doc_below() {}
+const _DOC_BELOW: () = _doc_below();
+
+/// doc
+#[rustversion::attr(all(), const)]
+fn _doc_above() {}
+const _DOC_ABOVE: () = _doc_above();
