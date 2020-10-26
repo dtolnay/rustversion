@@ -13,7 +13,7 @@ macro_rules! item {
     };
 }
 
-item!(fn _item() {});
+item! {fn _item() {}}
 const _ITEM: () = _item();
 
 macro_rules! ident {
@@ -23,5 +23,5 @@ macro_rules! ident {
     };
 }
 
-ident!(fn);
+ident! {fn}
 const _IDENT: () = _ident();
