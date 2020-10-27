@@ -1,4 +1,5 @@
 use crate::date::Date;
+use std::env;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 // Timestamp of 2016-03-01 00:00:00 in UTC.
@@ -13,14 +14,20 @@ const DAYS_BY_MONTH: [u8; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 pub fn today() -> Date {
     let default = Date {
-        year: 2019,
-        month: 1,
-        day: 1,
+        year: 2020,
+        month: 2,
+        day: 25,
     };
     try_today().unwrap_or(default)
 }
 
 fn try_today() -> Option<Date> {
+    if let Some(pkg_name) = env::var_os("CARGO_PKG_NAME") {
+        if pkg_name.to_str() == Some("rustversion-tests") {
+            return None; // Stable date for ui testing.
+        }
+    }
+
     let now = SystemTime::now();
     let since_epoch = now.duration_since(UNIX_EPOCH).ok()?;
     let secs = since_epoch.as_secs();
