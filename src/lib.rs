@@ -145,7 +145,19 @@
 //!
 //! <br>
 
-#![allow(clippy::needless_doctest_main, clippy::toplevel_ref_arg)]
+#![allow(
+    clippy::cast_lossless,
+    clippy::cast_possible_truncation,
+    clippy::doc_markdown,
+    clippy::enum_glob_use,
+    clippy::module_name_repetitions,
+    clippy::must_use_candidate,
+    clippy::needless_doctest_main,
+    clippy::needless_pass_by_value,
+    clippy::redundant_else,
+    clippy::toplevel_ref_arg,
+    clippy::unreadable_literal
+)]
 
 extern crate proc_macro;
 

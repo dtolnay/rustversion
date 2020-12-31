@@ -1,3 +1,5 @@
+#![allow(clippy::enum_glob_use, clippy::must_use_candidate)]
+
 include!("../build/rustc.rs");
 
 #[test]
