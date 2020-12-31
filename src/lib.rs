@@ -145,6 +145,8 @@
 //!
 //! <br>
 
+#![allow(clippy::needless_doctest_main, clippy::toplevel_ref_arg)]
+
 extern crate proc_macro;
 
 mod attr;
