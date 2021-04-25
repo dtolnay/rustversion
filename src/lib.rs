@@ -150,6 +150,7 @@
     clippy::cast_possible_truncation,
     clippy::doc_markdown,
     clippy::enum_glob_use,
+    clippy::from_iter_instead_of_collect,
     clippy::module_name_repetitions,
     clippy::must_use_candidate,
     clippy::needless_doctest_main,
