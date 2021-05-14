@@ -78,6 +78,14 @@ fn test_parse() {
                 }),
             },
         ),
+        (
+            "rustc 1.52.1-nightly (gentoo)",
+            Version {
+                minor: 52,
+                patch: 1,
+                channel: Dev,
+            },
+        ),
     ];
 
     for (string, expected) in cases {
