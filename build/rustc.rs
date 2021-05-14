@@ -48,23 +48,21 @@ pub fn parse(string: &str) -> Option<Version> {
         Some(channel) if channel == "dev" => Dev,
         Some(channel) if channel.starts_with("beta") => Beta,
         Some(channel) if channel == "nightly" => match words.next() {
-            Some(hash) => {
-                if !hash.starts_with('(') {
-                    return None;
+            Some(hash) if hash.starts_with('(') => match words.next() {
+                None if hash.ends_with(')') => Dev,
+                Some(date) if date.ends_with(')') => {
+                    let mut date = date[..date.len() - 1].split('-');
+                    let year = date.next()?.parse().ok()?;
+                    let month = date.next()?.parse().ok()?;
+                    let day = date.next()?.parse().ok()?;
+                    match date.next() {
+                        None => Nightly(Date { year, month, day }),
+                        Some(_) => return None,
+                    }
                 }
-                let date = words.next()?;
-                if !date.ends_with(')') {
-                    return None;
-                }
-                let mut date = date[..date.len() - 1].split('-');
-                let year = date.next()?.parse().ok()?;
-                let month = date.next()?.parse().ok()?;
-                let day = date.next()?.parse().ok()?;
-                match date.next() {
-                    None => Nightly(Date { year, month, day }),
-                    Some(_) => return None,
-                }
-            }
+                None | Some(_) => return None,
+            },
+            Some(_) => return None,
             None => Dev,
         },
         Some(_) => return None,
