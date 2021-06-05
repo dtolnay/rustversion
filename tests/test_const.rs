@@ -1,3 +1,5 @@
+#![allow(clippy::semicolon_if_nothing_returned)] // https://github.com/rust-lang/rust-clippy/issues/7324
+
 #[rustversion::attr(all(), const)]
 fn _basic() {}
 const _BASIC: () = _basic();
