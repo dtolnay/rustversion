@@ -3,6 +3,7 @@ name = "rustversion"
 version = "1.0.5"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 edition = "2018"
+rust-version = "1.31"
 license = "MIT OR Apache-2.0"
 description = "Conditional compilation according to rustc compiler version"
 repository = "https://github.com/dtolnay/rustversion"
