@@ -15,7 +15,7 @@ build = "build/build.rs"
 proc-macro = true
 
 [dev-dependencies]
-trybuild = "1.0.49"
+trybuild = { version = "1.0.49", features = ["diff"] }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
