@@ -167,6 +167,7 @@ mod bound;
 mod constfn;
 mod date;
 mod error;
+mod expand;
 mod expr;
 mod iter;
 mod release;
@@ -174,124 +175,55 @@ mod time;
 mod token;
 mod version;
 
-use crate::attr::Then;
-use crate::error::{Error, Result};
+use crate::error::Error;
 use crate::version::Version;
-use proc_macro::{Delimiter, Group, Ident, Punct, Spacing, Span, TokenStream, TokenTree};
-use std::iter::FromIterator;
+use proc_macro::TokenStream;
 
 const RUSTVERSION: Version = include!(concat!(env!("OUT_DIR"), "/version.rs"));
 
 #[proc_macro_attribute]
 pub fn stable(args: TokenStream, input: TokenStream) -> TokenStream {
-    cfg("stable", args, input)
+    expand::cfg("stable", args, input)
 }
 
 #[proc_macro_attribute]
 pub fn beta(args: TokenStream, input: TokenStream) -> TokenStream {
-    cfg("beta", args, input)
+    expand::cfg("beta", args, input)
 }
 
 #[proc_macro_attribute]
 pub fn nightly(args: TokenStream, input: TokenStream) -> TokenStream {
-    cfg("nightly", args, input)
+    expand::cfg("nightly", args, input)
 }
 
 #[proc_macro_attribute]
 pub fn since(args: TokenStream, input: TokenStream) -> TokenStream {
-    cfg("since", args, input)
+    expand::cfg("since", args, input)
 }
 
 #[proc_macro_attribute]
 pub fn before(args: TokenStream, input: TokenStream) -> TokenStream {
-    cfg("before", args, input)
+    expand::cfg("before", args, input)
 }
 
 #[proc_macro_attribute]
 pub fn not(args: TokenStream, input: TokenStream) -> TokenStream {
-    cfg("not", args, input)
+    expand::cfg("not", args, input)
 }
 
 #[proc_macro_attribute]
 pub fn any(args: TokenStream, input: TokenStream) -> TokenStream {
-    cfg("any", args, input)
+    expand::cfg("any", args, input)
 }
 
 #[proc_macro_attribute]
 pub fn all(args: TokenStream, input: TokenStream) -> TokenStream {
-    cfg("all", args, input)
-}
-
-fn cfg(introducer: &str, args: TokenStream, input: TokenStream) -> TokenStream {
-    try_cfg(introducer, args, input).unwrap_or_else(Error::into_compile_error)
-}
-
-fn try_cfg(introducer: &str, args: TokenStream, input: TokenStream) -> Result<TokenStream> {
-    let introducer = Ident::new(introducer, Span::call_site());
-
-    let mut full_args = TokenStream::from(TokenTree::Ident(introducer));
-    if !args.is_empty() {
-        full_args.extend(std::iter::once(TokenTree::Group(Group::new(
-            Delimiter::Parenthesis,
-            args,
-        ))));
-    }
-
-    let ref mut full_args = iter::new(full_args);
-    let expr = expr::parse(full_args)?;
-    token::parse_end(full_args)?;
-
-    if expr.eval(RUSTVERSION) {
-        Ok(input)
-    } else {
-        Ok(TokenStream::new())
-    }
+    expand::cfg("all", args, input)
 }
 
 #[proc_macro_attribute]
 pub fn attr(args: TokenStream, input: TokenStream) -> TokenStream {
     attr::parse(args)
-        .and_then(|args| try_attr(args, input))
+        .and_then(|args| expand::try_attr(args, input))
         .unwrap_or_else(Error::into_compile_error)
-}
-
-fn try_attr(args: attr::Args, input: TokenStream) -> Result<TokenStream> {
-    if !args.condition.eval(RUSTVERSION) {
-        return Ok(input);
-    }
-
-    match args.then {
-        Then::Const(const_token) => constfn::insert_const(input, const_token),
-        Then::Attribute(then) => {
-            // #[cfg_attr(all(), #then)]
-            Ok(TokenStream::from_iter(
-                vec![
-                    TokenTree::Punct(Punct::new('#', Spacing::Alone)),
-                    TokenTree::Group(Group::new(
-                        Delimiter::Bracket,
-                        TokenStream::from_iter(vec![
-                            TokenTree::Ident(Ident::new("cfg_attr", Span::call_site())),
-                            TokenTree::Group(Group::new(
-                                Delimiter::Parenthesis,
-                                TokenStream::from_iter(
-                                    vec![
-                                        TokenTree::Ident(Ident::new("all", Span::call_site())),
-                                        TokenTree::Group(Group::new(
-                                            Delimiter::Parenthesis,
-                                            TokenStream::new(),
-                                        )),
-                                        TokenTree::Punct(Punct::new(',', Spacing::Alone)),
-                                    ]
-                                    .into_iter()
-                                    .chain(then),
-                                ),
-                            )),
-                        ]),
-                    )),
-                ]
-                .into_iter()
-                .chain(input),
-            ))
-        }
-    }
 }
