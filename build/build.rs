@@ -36,7 +36,7 @@ fn main() {
     };
 
     let version = match rustc::parse(&string) {
-        Some(version) => format!("{:#?}\n", version),
+        Some(version) => version,
         None => {
             eprintln!(
                 "Error: unexpected output from `rustc --version`: {:?}\n\n\
@@ -47,6 +47,12 @@ fn main() {
         }
     };
 
+    if version.minor < 38 {
+        // Prior to 1.38, a #[proc_macro] is not allowed to be named `cfg`.
+        println!("cargo:rustc-cfg=cfg_macro_not_allowed");
+    }
+
+    let version = format!("{:#?}\n", version);
     let out_dir = env::var_os("OUT_DIR").expect("OUT_DIR not set");
     let out_file = Path::new(&out_dir).join("version.rs");
     fs::write(out_file, version).expect("failed to write version.rs");

@@ -227,3 +227,18 @@ pub fn attr(args: TokenStream, input: TokenStream) -> TokenStream {
         .and_then(|args| expand::try_attr(args, input))
         .unwrap_or_else(Error::into_compile_error)
 }
+
+#[cfg(not(cfg_macro_not_allowed))]
+#[proc_macro]
+pub fn cfg(input: TokenStream) -> TokenStream {
+    use proc_macro::{Ident, Span, TokenTree};
+    (|| {
+        let ref mut args = iter::new(input);
+        let expr = expr::parse(args)?;
+        token::parse_end(args)?;
+        let boolean = expr.eval(RUSTVERSION);
+        let ident = Ident::new(&boolean.to_string(), Span::call_site());
+        Ok(TokenStream::from(TokenTree::Ident(ident)))
+    })()
+    .unwrap_or_else(Error::into_compile_error)
+}
