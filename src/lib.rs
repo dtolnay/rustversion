@@ -151,6 +151,8 @@
     clippy::doc_markdown,
     clippy::enum_glob_use,
     clippy::from_iter_instead_of_collect,
+    // https://github.com/rust-lang/rust-clippy/issues/8539
+    clippy::iter_with_drain,
     clippy::module_name_repetitions,
     clippy::must_use_candidate,
     clippy::needless_doctest_main,
