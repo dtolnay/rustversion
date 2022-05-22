@@ -1,4 +1,8 @@
-#![allow(clippy::enum_glob_use, clippy::must_use_candidate)]
+#![allow(
+    clippy::derive_partial_eq_without_eq,
+    clippy::enum_glob_use,
+    clippy::must_use_candidate
+)]
 
 include!("../build/rustc.rs");
 

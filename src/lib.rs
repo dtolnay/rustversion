@@ -148,6 +148,7 @@
 #![allow(
     clippy::cast_lossless,
     clippy::cast_possible_truncation,
+    clippy::derive_partial_eq_without_eq,
     clippy::doc_markdown,
     clippy::enum_glob_use,
     clippy::from_iter_instead_of_collect,
