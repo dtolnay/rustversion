@@ -54,6 +54,6 @@ fn main() {
 
     let version = format!("{:#?}\n", version);
     let out_dir = env::var_os("OUT_DIR").expect("OUT_DIR not set");
-    let out_file = Path::new(&out_dir).join("version.rs");
-    fs::write(out_file, version).expect("failed to write version.rs");
+    let out_file = Path::new(&out_dir).join("version.expr");
+    fs::write(out_file, version).expect("failed to write version.expr");
 }
