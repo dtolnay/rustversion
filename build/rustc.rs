@@ -3,6 +3,7 @@ use std::fmt::{self, Debug};
 
 pub enum ParseResult {
     Success(Version),
+    OopsClippy,
     Unrecognized,
 }
 
@@ -32,8 +33,10 @@ pub fn parse(string: &str) -> ParseResult {
     let last_line = string.lines().last().unwrap_or(string);
     let mut words = last_line.trim().split(' ');
 
-    if words.next() != Some("rustc") {
-        return ParseResult::Unrecognized;
+    match words.next() {
+        Some("rustc") => {}
+        Some(word) if word.starts_with("clippy") => return ParseResult::OopsClippy,
+        Some(_) | None => return ParseResult::Unrecognized,
     }
 
     parse_words(&mut words).map_or(ParseResult::Unrecognized, ParseResult::Success)
