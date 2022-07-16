@@ -36,8 +36,8 @@ fn main() {
     };
 
     let version = match rustc::parse(&string) {
-        Some(version) => version,
-        None => {
+        rustc::ParseResult::Success(version) => version,
+        rustc::ParseResult::Unrecognized => {
             eprintln!(
                 "Error: unexpected output from `rustc --version`: {:?}\n\n\
                  Please file an issue in https://github.com/dtolnay/rustversion",
