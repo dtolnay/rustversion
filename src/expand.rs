@@ -46,23 +46,21 @@ pub fn try_attr(args: attr::Args, input: TokenStream) -> Result<TokenStream> {
                         Delimiter::Bracket,
                         TokenStream::from_iter(vec![
                             TokenTree::Ident(Ident::new("cfg_attr", Span::call_site())),
-                            TokenTree::Group(
-                                Group::new(
-                                    Delimiter::Parenthesis,
-                                    TokenStream::from_iter(
-                                        vec![
-                                            TokenTree::Ident(Ident::new("all", Span::call_site())),
-                                            TokenTree::Group(Group::new(
-                                                Delimiter::Parenthesis,
-                                                TokenStream::new(),
-                                            )),
-                                            TokenTree::Punct(Punct::new(',', Spacing::Alone)),
-                                        ]
-                                        .into_iter()
-                                        .chain(then),
-                                    ),
+                            TokenTree::Group(Group::new(
+                                Delimiter::Parenthesis,
+                                TokenStream::from_iter(
+                                    vec![
+                                        TokenTree::Ident(Ident::new("all", Span::call_site())),
+                                        TokenTree::Group(Group::new(
+                                            Delimiter::Parenthesis,
+                                            TokenStream::new(),
+                                        )),
+                                        TokenTree::Punct(Punct::new(',', Spacing::Alone)),
+                                    ]
+                                    .into_iter()
+                                    .chain(then),
                                 ),
-                            ),
+                            )),
                         ]),
                     )),
                 ]
