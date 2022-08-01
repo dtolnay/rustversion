@@ -3,6 +3,7 @@ name = "rustversion"
 version = "1.0.8"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 build = "build/build.rs"
+categories = ["development-tools::build-utils", "no-std"]
 description = "Conditional compilation according to rustc compiler version"
 documentation = "https://docs.rs/rustversion"
 edition = "2018"
