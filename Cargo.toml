@@ -8,7 +8,6 @@ description = "Conditional compilation according to rustc compiler version"
 documentation = "https://docs.rs/rustversion"
 edition = "2018"
 license = "MIT OR Apache-2.0"
-readme = "README.md"
 repository = "https://github.com/dtolnay/rustversion"
 rust-version = "1.31"
 
