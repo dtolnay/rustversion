@@ -30,6 +30,14 @@ pub(crate) fn insert_const(input: TokenStream, const_span: Span) -> Result<Token
 
     while let Some(token) = input.next() {
         match token {
+            TokenTree::Ident(ref ident) if ident.to_string() == "impl" => {
+                out.extend(pending);
+                out.extend(iter::once(token));
+                let const_ident = TokenTree::Ident(Ident::new("const", const_span));
+                out.extend(iter::once(const_ident));
+                out.extend(input);
+                return Ok(out);
+            }
             TokenTree::Ident(ref ident) if ident.to_string() == "fn" => {
                 let const_ident = Ident::new("const", const_span);
                 out.extend(iter::once(TokenTree::Ident(const_ident)));
@@ -54,5 +62,5 @@ pub(crate) fn insert_const(input: TokenStream, const_span: Span) -> Result<Token
         }
     }
 
-    Err(Error::new(const_span, "only allowed on a fn item"))
+    Err(Error::new(const_span, "only allowed on an impl or fn item"))
 }

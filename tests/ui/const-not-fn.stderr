@@ -1,4 +1,4 @@
-error: only allowed on a fn item
+error: only allowed on an impl or fn item
  --> tests/ui/const-not-fn.rs:1:28
   |
 1 | #[rustversion::attr(all(), const)]
