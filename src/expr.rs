@@ -11,6 +11,7 @@ pub enum Expr {
     Stable,
     Beta,
     Nightly,
+    Msrv,
     Date(Date),
     Since(Bound),
     Before(Bound),
@@ -31,6 +32,21 @@ impl Expr {
                 Channel::Nightly(_) | Channel::Dev => true,
                 Channel::Stable | Channel::Beta => false,
             },
+            Msrv => {
+                #[allow(clippy::option_env_unwrap)]
+                let mut cargo_rust_version = option_env!("CARGO_PKG_RUST_VERSION")
+                    .expect("manifest should specify a rust-version to use the msrv macro")
+                    .splitn(3, '.');
+
+                let _maj = cargo_rust_version.next().unwrap();
+                let min = cargo_rust_version.next().unwrap().parse().unwrap();
+                let patch = cargo_rust_version
+                    .next()
+                    .map(|val| val.parse().unwrap())
+                    .unwrap_or(0);
+
+                rustc.channel == Channel::Stable && rustc.minor == min && rustc.patch >= patch
+            }
             Date(date) => match rustc.channel {
                 Channel::Nightly(rustc) => rustc == *date,
                 Channel::Stable | Channel::Beta | Channel::Dev => false,
@@ -54,6 +70,7 @@ pub fn parse(iter: Iter) -> Result<Expr> {
         Some(TokenTree::Ident(i)) if i.to_string() == "stable" => parse_stable(iter),
         Some(TokenTree::Ident(i)) if i.to_string() == "beta" => Ok(Expr::Beta),
         Some(TokenTree::Ident(i)) if i.to_string() == "nightly" => parse_nightly(iter),
+        Some(TokenTree::Ident(i)) if i.to_string() == "msrv" => Ok(Expr::Msrv),
         Some(TokenTree::Ident(i)) if i.to_string() == "since" => parse_since(i, iter),
         Some(TokenTree::Ident(i)) if i.to_string() == "before" => parse_before(i, iter),
         Some(TokenTree::Ident(i)) if i.to_string() == "not" => parse_not(i, iter),
@@ -63,7 +80,7 @@ pub fn parse(iter: Iter) -> Result<Expr> {
             let span = unexpected
                 .as_ref()
                 .map_or_else(Span::call_site, TokenTree::span);
-            Err(Error::new(span, "expected one of `stable`, `beta`, `nightly`, `since`, `before`, `not`, `any`, `all`"))
+            Err(Error::new(span, "expected one of `stable`, `beta`, `nightly`, `msrv`, `since`, `before`, `not`, `any`, `all`"))
         }
     }
 }

@@ -201,6 +201,11 @@ pub fn nightly(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
+pub fn msrv(args: TokenStream, input: TokenStream) -> TokenStream {
+    expand::cfg("msrv", args, input)
+}
+
+#[proc_macro_attribute]
 pub fn since(args: TokenStream, input: TokenStream) -> TokenStream {
     expand::cfg("since", args, input)
 }
