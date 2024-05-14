@@ -183,7 +183,11 @@ use crate::error::Error;
 use crate::version::Version;
 use proc_macro::TokenStream;
 
+#[cfg(not(target_os = "windows"))]
 const RUSTVERSION: Version = include!(concat!(env!("OUT_DIR"), "/version.expr"));
+
+#[cfg(target_os = "windows")]
+const RUSTVERSION: Version = include!(concat!(env!("OUT_DIR"), "\\version.expr"));
 
 #[proc_macro_attribute]
 pub fn stable(args: TokenStream, input: TokenStream) -> TokenStream {
