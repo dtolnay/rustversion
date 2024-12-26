@@ -93,6 +93,13 @@
 //!   <code style="display:inline">cfg_attr</code>.
 //!   </p>
 //!
+//! - <p style="margin-left:50px;text-indent:-50px">
+//!   <b><code style="display:inline">rustversion::cfg!(</code></b><i>selector</i><b><code style="display:inline">)</code></b>
+//!   —<br>
+//!   An expression form of any of the above attributes; for example
+//!   <i>if rustversion::cfg!(any(stable, beta)) { ... }</i>.
+//!   </p>
+//!
 //! <br>
 //!
 //! # Use cases

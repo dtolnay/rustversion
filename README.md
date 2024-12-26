@@ -73,6 +73,11 @@ rustversion = "1.0"
   —<br>
   For conditional inclusion of attributes; analogous to `cfg_attr`.
 
+- <b>`rustversion::cfg!(`</b><i>selector</i><b>`)`</b>
+  —<br>
+  An expression form of any of the above attributes; for example
+  *if rustversion::cfg!(any(stable, beta)) { ... }*.
+
 <br>
 
 ## Use cases
