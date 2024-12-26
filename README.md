@@ -126,6 +126,29 @@ fn duration_as_days(dur: Duration) -> u64 {
 }
 ```
 
+Emitting Cargo cfg directives from a build script. Note that this requires
+listing `rustversion` under `[build-dependencies]` in Cargo.toml, not
+`[dependencies]`.
+
+```rust
+// build.rs
+
+fn main() {
+    if rustversion::cfg!(since(1.36)) {
+        println!("cargo:rustc-cfg=no_std");
+    }
+}
+```
+
+```rust
+// src/lib.rs
+
+#![cfg_attr(no_std, no_std)]
+
+#[cfg(no_std)]
+extern crate alloc;
+```
+
 <br>
 
 #### License
