@@ -1,4 +1,5 @@
 #![allow(
+    clippy::elidable_lifetime_names,
     clippy::enum_glob_use,
     clippy::must_use_candidate,
     clippy::single_match_else
