@@ -38,7 +38,7 @@ jobs:
       - name: RUSTFLAGS=-Zfmt-debug=none cargo test
         run: RUSTFLAGS=${RUSTFLAGS}\ -Zfmt-debug=none cargo test
         if: matrix.rust == 'nightly'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: matrix.rust == 'nightly' && always()
         with:
           name: Cargo.lock
